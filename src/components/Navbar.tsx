@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import FikavoLogo from '../assets/fikavo logo final/fikavo logo.png';
+import FikavoLogo from '../assets/fikavo logo final/fikavo_logo.png';
 import Button from './ui/Button';
 import { Menu, X } from 'lucide-react';
 
@@ -16,7 +16,7 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = ['Services', 'Work', 'Process', 'Contact'];
+  const navLinks = ['Services', 'projects', 'Process', 'Contact'];
 
   return (
     <motion.nav
@@ -138,7 +138,7 @@ const Navbar: React.FC = () => {
               <div className="px-4 py-3">
                 <Button 
                   variant="primary"
-                  fullWidth
+                  
                   className="shadow-lg shadow-brand-violet/20"
                 >
                   Get a Quote

@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Button from './ui/Button';
-import VoLoop from '../assets/VoLoop';
 
 const Hero: React.FC = () => {
   return (
@@ -13,14 +12,14 @@ const Hero: React.FC = () => {
           animate={{ rotate: 360 }}
           transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
         >
-          <VoLoop className="w-full h-full text-brand-violet" />
+          
         </motion.div>
         <motion.div 
           className="absolute bottom-20 left-10 w-48 h-48"
           animate={{ rotate: -360 }}
           transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
         >
-          <VoLoop className="w-full h-full text-brand-dark" />
+          
         </motion.div>
         
         {/* Added subtle gradient overlay */}
@@ -111,7 +110,7 @@ const Hero: React.FC = () => {
               {[
                 { number: '50+', label: 'Projects Delivered' },
                 { number: '25+', label: 'Happy Clients' },
-                { number: '98%', label: 'Success Rate' }
+                { number: '100%', label: 'Success Rate' }
               ].map((stat, index) => (
                 <motion.div 
                   key={index} 
@@ -221,7 +220,7 @@ const Hero: React.FC = () => {
                 ease: "linear"
               }}
             >
-              <VoLoop className="w-full h-full" />
+              
             </motion.div>
           </motion.div>
         </div>
