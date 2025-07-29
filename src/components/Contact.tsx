@@ -20,7 +20,7 @@ const Contact: React.FC = () => {
     setSubmissionStatus("idle");
 
     try {
-      const res = await fetch("http://localhost:5001/api/contact", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,48 +62,40 @@ const Contact: React.FC = () => {
             <>
               <h2 className="text-xl font-bold mb-4">🚀 Start Your Project</h2>
               <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Full Name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Email Address"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    name="company"
-                    placeholder="Company Name"
-                    value={formData.company}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    name="message"
-                    placeholder="Project Details"
-                    required
-                    value={formData.message}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500 h-32 resize-none"
-                  ></textarea>
-                </div>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500"
+                />
+                <input
+                  type="text"
+                  name="company"
+                  placeholder="Company Name"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500"
+                />
+                <textarea
+                  name="message"
+                  placeholder="Project Details"
+                  required
+                  value={formData.message}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500 h-32 resize-none"
+                ></textarea>
                 <button
                   type="submit"
                   className="w-full bg-yellow-400 hover:bg-yellow-300 text-purple-800 font-semibold py-3 rounded-md transition"
@@ -118,7 +110,7 @@ const Contact: React.FC = () => {
           )}
         </div>
 
-        {/* Direct Contact Column */}
+        {/* Contact Info Column */}
         <div className="text-white space-y-6">
           <h3 className="text-3xl font-bold">Or, Reach Us Directly</h3>
           <p className="text-gray-300">Have a quick question? We'd love to hear from you. We typically respond within 24 hours.</p>

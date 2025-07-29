@@ -25,7 +25,7 @@ const Messages = () => {
   };
 
   const fetchMessages = () => {
-    fetch("http://localhost:5001/api/contact/messages", {
+    fetch("http://VITE_API_BASE_URL/api/contact/messages", {
       headers: getAuthHeaders(),
     })
       .then((res) => res.json())
@@ -42,7 +42,7 @@ const Messages = () => {
 
   const deleteMessage = (id: string) => {
     if (!window.confirm("Are you sure you want to delete this message?")) return;
-    fetch(`http://localhost:5001/api/contact/messages/${id}`, {
+    fetch(`http://VITE_API_BASE_URL/api/contact/messages/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
     }).then(() => fetchMessages());
@@ -59,7 +59,7 @@ const Messages = () => {
   const deleteSelected = () => {
     if (selected.size === 0) return;
     if (!window.confirm("Delete selected messages?")) return;
-    fetch("http://localhost:5001/api/contact/messages/deleteMany", {
+    fetch("http://VITE_API_BASE_URL/api/contact/messages/deleteMany", {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify({ ids: Array.from(selected) }),
