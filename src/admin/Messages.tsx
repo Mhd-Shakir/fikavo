@@ -16,8 +16,10 @@ const Messages = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showDeleteForId, setShowDeleteForId] = useState<string | null>(null);
 
+  const apiBase = import.meta.env.VITE_API_BASE_URL;
+
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("adminToken"); // Make sure admin token key is correct
+    const token = localStorage.getItem("adminToken");
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -25,7 +27,7 @@ const Messages = () => {
   };
 
   const fetchMessages = () => {
-    fetch("http://VITE_API_BASE_URL/api/contact/messages", {
+    fetch(`${apiBase}/api/contact/messages`, {
       headers: getAuthHeaders(),
     })
       .then((res) => res.json())
@@ -42,7 +44,8 @@ const Messages = () => {
 
   const deleteMessage = (id: string) => {
     if (!window.confirm("Are you sure you want to delete this message?")) return;
-    fetch(`http://VITE_API_BASE_URL/api/contact/messages/${id}`, {
+
+    fetch(`${apiBase}/api/contact/messages/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
     }).then(() => fetchMessages());
@@ -59,7 +62,8 @@ const Messages = () => {
   const deleteSelected = () => {
     if (selected.size === 0) return;
     if (!window.confirm("Delete selected messages?")) return;
-    fetch("http://VITE_API_BASE_URL/api/contact/messages/deleteMany", {
+
+    fetch(`${apiBase}/api/contact/messages/deleteMany`, {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify({ ids: Array.from(selected) }),

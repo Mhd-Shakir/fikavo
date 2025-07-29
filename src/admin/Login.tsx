@@ -14,7 +14,7 @@ const AdminLogin = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://VITE_API_BASE_URL/api/admin/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -24,7 +24,7 @@ const AdminLogin = () => {
 
       if (res.ok && data.token) {
         // ✅ Save token with correct key
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('adminToken', data.token);
         navigate('/admin');
       } else {
         setError(data.message || 'Login failed');
