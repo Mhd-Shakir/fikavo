@@ -20,35 +20,76 @@ const Messages = () => {
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("adminToken");
+    if (!token) {
+      console.warn("Admin token not found");
+      return {};
+    }
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     };
   };
 
-  const fetchMessages = () => {
-    fetch(`${apiBase}/api/contact/messages`, {
-      headers: getAuthHeaders(),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setMessages(data.messages.reverse());
-        }
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch(`${apiBase}/api/contact/messages`, {
+        headers: getAuthHeaders(),
       });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setMessages(data.messages.reverse());
+      } else {
+        console.error("Failed to fetch messages:", data.message);
+      }
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    }
   };
 
   useEffect(() => {
     fetchMessages();
   }, []);
 
-  const deleteMessage = (id: string) => {
+  const deleteMessage = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this message?")) return;
 
-    fetch(`${apiBase}/api/contact/messages/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    }).then(() => fetchMessages());
+    try {
+      const res = await fetch(`${apiBase}/api/contact/messages/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      if (res.ok) {
+        fetchMessages();
+      } else {
+        console.error("Delete failed.");
+      }
+    } catch (err) {
+      console.error("Error deleting message:", err);
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm("Delete selected messages?")) return;
+
+    try {
+      const res = await fetch(`${apiBase}/api/contact/messages/deleteMany`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+
+      if (res.ok) {
+        setSelected(new Set());
+        fetchMessages();
+      } else {
+        console.error("Failed to delete selected messages");
+      }
+    } catch (err) {
+      console.error("Error deleting selected:", err);
+    }
   };
 
   const toggleSelect = (id: string) => {
@@ -56,20 +97,6 @@ const Messages = () => {
       const copy = new Set(prev);
       copy.has(id) ? copy.delete(id) : copy.add(id);
       return copy;
-    });
-  };
-
-  const deleteSelected = () => {
-    if (selected.size === 0) return;
-    if (!window.confirm("Delete selected messages?")) return;
-
-    fetch(`${apiBase}/api/contact/messages/deleteMany`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ ids: Array.from(selected) }),
-    }).then(() => {
-      setSelected(new Set());
-      fetchMessages();
     });
   };
 
@@ -118,9 +145,7 @@ const Messages = () => {
                     className="mt-1"
                   />
                   <div>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {msg.name}
-                    </p>
+                    <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
                     <p className="text-sm text-gray-600">{msg.email}</p>
                     <p className="text-sm text-gray-600">
                       Company: {msg.company || "N/A"}
