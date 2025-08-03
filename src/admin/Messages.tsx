@@ -1,4 +1,3 @@
-// src/admin/Messages.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
@@ -21,16 +20,12 @@ const Messages = () => {
 
   const apiBase = import.meta.env.VITE_API_BASE_URL;
 
-  // Grab token; if missing, force login
-  const getAuthHeaders = () => {
+  // ✅ Common headers for auth
+  const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem("adminToken");
-    if (!token) {
-      navigate("/admin/login");
-      return {};
-    }
     return {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
   };
 
@@ -40,32 +35,36 @@ const Messages = () => {
         headers: getAuthHeaders(),
       });
 
+      const data = await res.json();
+
       if (res.status === 401) {
-        // invalid or expired token
         localStorage.removeItem("adminToken");
-        navigate("/admin/login");
+        navigate("/admin");
         return;
       }
 
-      const data = await res.json();
       if (res.ok && data.success) {
-        // we want newest first
         setMessages(data.messages);
       } else {
-        console.error("Failed to fetch messages:", data.error || data.message);
+        console.error("Fetch failed:", data.message || "Unknown error");
       }
     } catch (err) {
-      console.error("Error fetching messages:", err);
+      console.error("Network error:", err);
     }
   };
 
   useEffect(() => {
-    fetchMessages();
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      navigate("/admin");
+    } else {
+      fetchMessages();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const deleteMessage = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this message?")) return;
+    if (!confirm("Delete this message?")) return;
 
     try {
       const res = await fetch(`${apiBase}/api/contact/messages/${id}`, {
@@ -75,23 +74,23 @@ const Messages = () => {
 
       if (res.status === 401) {
         localStorage.removeItem("adminToken");
-        navigate("/admin/login");
+        navigate("/admin");
         return;
       }
 
       if (res.ok) {
         fetchMessages();
       } else {
-        console.error("Delete failed.");
+        console.error("Failed to delete message");
       }
     } catch (err) {
-      console.error("Error deleting message:", err);
+      console.error("Delete error:", err);
     }
   };
 
   const deleteSelected = async () => {
-    if (selected.size === 0) return;
-    if (!window.confirm("Delete selected messages?")) return;
+    if (!selected.size) return;
+    if (!confirm("Delete selected messages?")) return;
 
     try {
       const res = await fetch(`${apiBase}/api/contact/messages/deleteMany`, {
@@ -102,7 +101,7 @@ const Messages = () => {
 
       if (res.status === 401) {
         localStorage.removeItem("adminToken");
-        navigate("/admin/login");
+        navigate("/admin");
         return;
       }
 
@@ -110,10 +109,10 @@ const Messages = () => {
         setSelected(new Set());
         fetchMessages();
       } else {
-        console.error("Failed to delete selected messages");
+        console.error("Bulk delete failed");
       }
     } catch (err) {
-      console.error("Error deleting selected:", err);
+      console.error("Bulk delete error:", err);
     }
   };
 
@@ -141,7 +140,7 @@ const Messages = () => {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Search by name/email/company"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:w-96 px-4 py-2 border rounded-md"
@@ -151,10 +150,7 @@ const Messages = () => {
       <div className="grid gap-6">
         {messages
           .filter((msg) =>
-            [msg.name, msg.email, msg.company]
-              .join(" ")
-              .toLowerCase()
-              .includes(search.toLowerCase())
+            [msg.name, msg.email, msg.company].join(" ").toLowerCase().includes(search.toLowerCase())
           )
           .map((msg) => (
             <div
@@ -179,9 +175,7 @@ const Messages = () => {
                       <strong>Message:</strong> {msg.message}
                     </p>
                     <p className="text-xs text-gray-400 mt-2">
-                      {msg.createdAt
-                        ? new Date(msg.createdAt).toLocaleString()
-                        : ""}
+                      {msg.createdAt && new Date(msg.createdAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -195,7 +189,7 @@ const Messages = () => {
                     }
                     className="text-indigo-600 text-sm hover:underline font-bold"
                   >
-                    {showDeleteForId === msg._id ? "Hide Delete" : "Delete"}
+                    {showDeleteForId === msg._id ? "Cancel" : "Delete"}
                   </button>
 
                   {showDeleteForId === msg._id && (
