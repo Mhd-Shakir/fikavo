@@ -20,7 +20,6 @@ const Messages = () => {
 
   const apiBase = import.meta.env.VITE_API_BASE_URL;
 
-  // ✅ Common headers for auth
   const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem("adminToken");
     return {
@@ -127,13 +126,13 @@ const Messages = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">📩 Contact Messages</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Contact Messages</h2>
         <button
           onClick={deleteSelected}
           disabled={selected.size === 0}
           className="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 disabled:opacity-50"
         >
-          🗑️ Delete Selected
+          Delete Selected
         </button>
       </div>
 
@@ -167,7 +166,9 @@ const Messages = () => {
                   />
                   <div>
                     <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
-                    <p className="text-sm text-gray-600">{msg.email}</p>
+                    <p className="text-sm text-blue-600 hover:underline">
+                      <a href={`mailto:${msg.email}`}>{msg.email}</a>
+                    </p>
                     <p className="text-sm text-gray-600">
                       Company: {msg.company || "N/A"}
                     </p>
