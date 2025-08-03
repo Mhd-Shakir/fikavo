@@ -1,4 +1,6 @@
+// src/admin/Messages.tsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
 interface Message {
@@ -15,13 +17,15 @@ const Messages = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showDeleteForId, setShowDeleteForId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const apiBase = import.meta.env.VITE_API_BASE_URL;
 
+  // Grab token; if missing, force login
   const getAuthHeaders = () => {
     const token = localStorage.getItem("adminToken");
     if (!token) {
-      console.warn("Admin token not found");
+      navigate("/admin/login");
       return {};
     }
     return {
@@ -35,12 +39,20 @@ const Messages = () => {
       const res = await fetch(`${apiBase}/api/contact/messages`, {
         headers: getAuthHeaders(),
       });
-      const data = await res.json();
 
+      if (res.status === 401) {
+        // invalid or expired token
+        localStorage.removeItem("adminToken");
+        navigate("/admin/login");
+        return;
+      }
+
+      const data = await res.json();
       if (res.ok && data.success) {
-        setMessages(data.messages.reverse());
+        // we want newest first
+        setMessages(data.messages);
       } else {
-        console.error("Failed to fetch messages:", data.message);
+        console.error("Failed to fetch messages:", data.error || data.message);
       }
     } catch (err) {
       console.error("Error fetching messages:", err);
@@ -49,6 +61,7 @@ const Messages = () => {
 
   useEffect(() => {
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const deleteMessage = async (id: string) => {
@@ -59,6 +72,12 @@ const Messages = () => {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("adminToken");
+        navigate("/admin/login");
+        return;
+      }
 
       if (res.ok) {
         fetchMessages();
@@ -80,6 +99,12 @@ const Messages = () => {
         headers: getAuthHeaders(),
         body: JSON.stringify({ ids: Array.from(selected) }),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("adminToken");
+        navigate("/admin/login");
+        return;
+      }
 
       if (res.ok) {
         setSelected(new Set());
@@ -154,7 +179,9 @@ const Messages = () => {
                       <strong>Message:</strong> {msg.message}
                     </p>
                     <p className="text-xs text-gray-400 mt-2">
-                      {new Date(msg.createdAt || "").toLocaleString()}
+                      {msg.createdAt
+                        ? new Date(msg.createdAt).toLocaleString()
+                        : ""}
                     </p>
                   </div>
                 </div>
