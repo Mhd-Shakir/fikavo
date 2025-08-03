@@ -33,7 +33,7 @@ const Footer: React.FC = () => {
 
   const footerSections = [
     { title: 'Services', links: ['Startup Launchpad', 'Digital Transformation', 'Web Development', 'Mobile Solutions', 'Growth Analytics'] },
-    { title: 'Company', links: ['About Us', 'Our Process', 'Case Studies', 'Careers', 'Blog'] },
+    { title: 'phone', links: ['About Us', 'Our Process', 'Case Studies', 'Careers', 'Blog'] },
     { title: 'Resources', links: ['Free Consultation', 'Project Planner', 'Tech Stack Guide', 'ROI Calculator'] }
   ];
 

@@ -6,7 +6,7 @@ interface Message {
   _id: string;
   name: string;
   email: string;
-  company?: string;
+  phone?: string;
   message: string;
   createdAt?: string;
 }
@@ -139,7 +139,7 @@ const Messages = () => {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Search by name/email/company"
+          placeholder="Search by name/email/phone"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:w-96 px-4 py-2 border rounded-md"
@@ -149,7 +149,7 @@ const Messages = () => {
       <div className="grid gap-6">
         {messages
           .filter((msg) =>
-            [msg.name, msg.email, msg.company].join(" ").toLowerCase().includes(search.toLowerCase())
+            [msg.name, msg.email, msg.phone].join(" ").toLowerCase().includes(search.toLowerCase())
           )
           .map((msg) => (
             <div
@@ -170,7 +170,7 @@ const Messages = () => {
                       <a href={`mailto:${msg.email}`}>{msg.email}</a>
                     </p>
                     <p className="text-sm text-gray-600">
-                      Company: {msg.company || "N/A"}
+                      phone: {msg.phone || "N/A"}
                     </p>
                     <p className="text-gray-700 mt-2">
                       <strong>Message:</strong> {msg.message}

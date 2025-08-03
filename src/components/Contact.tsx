@@ -5,7 +5,7 @@ const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    company: "",
+    phone: "",
     message: "",
   });
 
@@ -31,7 +31,7 @@ const Contact: React.FC = () => {
       const data = await res.json();
       if (res.ok && (data.success || data.message === "Success")) {
         setSubmissionStatus("success");
-        setFormData({ name: "", email: "", company: "", message: "" });
+        setFormData({ name: "", email: "", phone: "", message: "" });
       } else {
         setSubmissionStatus("error");
       }
@@ -82,9 +82,9 @@ const Contact: React.FC = () => {
                 />
                 <input
                   type="text"
-                  name="company"
-                  placeholder="Company Name"
-                  value={formData.company}
+                  name="phone"
+                  placeholder="phone Name"
+                  value={formData.phone}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-md bg-white text-black placeholder-gray-500"
                 />
