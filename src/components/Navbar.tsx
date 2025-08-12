@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import FikavoLogo from '../assets/fikavo logo final/fikavo_logo.png';
-import Button from './ui/Button';
-import { Menu, X } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
+import FikavoLogo from "../assets/fikavo logo final/fikavo_logo.png";
+import Button from "./ui/Button";
+import { Menu, X } from "lucide-react";
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,18 +13,24 @@ const Navbar: React.FC = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = ['Services', 'projects', 'Process', 'Contact'];
+  const navLinks = [
+    { label: "About", path: "/about" },
+    { label: "Services", path: "/services" },
+    { label: "Projects", path: "/projects" },
+    { label: "Process", path: "/process" },
+    { label: "Contact", path: "/contact" },
+  ];
 
   return (
     <motion.nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-lg py-0' 
-          : 'bg-transparent py-2'
+        isScrolled
+          ? "bg-white/95 backdrop-blur-md shadow-lg py-0"
+          : "bg-transparent py-2"
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -37,55 +44,59 @@ const Navbar: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <img src={FikavoLogo} alt="" className='w-20' />
+            <Link to="/">
+              <img src={FikavoLogo} alt="Fikavo Logo" className="w-24" />
+            </Link>
           </motion.div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
               {navLinks.map((link, index) => (
-                <motion.a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
-                  className="relative text-brand-dark px-3 py-2 text-sm font-medium font-poppins group"
+                <motion.div
+                  key={link.path}
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.6, 
+                  transition={{
+                    duration: 0.6,
                     delay: index * 0.1,
-                    ease: [0.25, 1, 0.5, 1]
+                    ease: [0.25, 1, 0.5, 1],
                   }}
                 >
-                  {link}
-                  <motion.span 
-                    className="absolute left-0 bottom-0 h-0.5 bg-brand-violet origin-bottom-right transform scale-x-0 group-hover:origin-bottom-left group-hover:scale-x-100 transition-transform duration-300 ease-out"
-                    layoutId={`nav-underline-${index}`}
-                  />
-                </motion.a>
+                  <Link
+                    to={link.path}
+                    className="relative text-brand-dark px-3 py-2 text-sm font-medium font-poppins group"
+                  >
+                    {link.label}
+                    <motion.span
+                      className="absolute left-0 bottom-0 h-0.5 bg-brand-violet origin-bottom-right transform scale-x-0 group-hover:origin-bottom-left group-hover:scale-x-100 transition-transform duration-300 ease-out"
+                      layoutId={`nav-underline-${index}`}
+                    />
+                  </Link>
+                </motion.div>
               ))}
             </div>
           </div>
 
           {/* CTA Button */}
-          <motion.div 
+          <motion.div
             className="hidden md:block"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <Button 
-              variant="primary" 
-              className="shadow-lg shadow-brand-violet/20 hover:shadow-brand-violet/30 transition-shadow"
-            >
-              Get a Quote
-            </Button>
+            <Link to="/contact">
+              <Button
+                variant="primary"
+                className="shadow-lg shadow-brand-violet/20 hover:shadow-brand-violet/30 transition-shadow"
+              >
+                Get a Quote
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Mobile menu button */}
-          <motion.div 
-            className="md:hidden"
-            whileTap={{ scale: 0.9 }}
-          >
+          <motion.div className="md:hidden" whileTap={{ scale: 0.9 }}>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10"
@@ -101,48 +112,52 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu with AnimatePresence */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
             className="md:hidden bg-white border-t border-gray-100"
             initial={{ opacity: 0, height: 0 }}
-            animate={{ 
-              opacity: 1, 
-              height: 'auto',
-              transition: { duration: 0.3, ease: [0.25, 1, 0.5, 1] }
+            animate={{
+              opacity: 1,
+              height: "auto",
+              transition: { duration: 0.3, ease: [0.25, 1, 0.5, 1] },
             }}
-            exit={{ 
-              opacity: 0, 
+            exit={{
+              opacity: 0,
               height: 0,
-              transition: { duration: 0.2, ease: [0.25, 1, 0.5, 1] }
+              transition: { duration: 0.2, ease: [0.25, 1, 0.5, 1] },
             }}
           >
             <div className="px-2 pt-2 pb-5 space-y-1">
               {navLinks.map((link) => (
-                <motion.a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
-                  className="block px-4 py-3 text-brand-dark hover:bg-brand-violet/5 rounded-lg transition-colors font-poppins"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                <motion.div
+                  key={link.path}
                   initial={{ x: -20, opacity: 0 }}
-                  animate={{ 
-                    x: 0, 
+                  animate={{
+                    x: 0,
                     opacity: 1,
-                    transition: { duration: 0.3 }
+                    transition: { duration: 0.3 },
                   }}
                 >
-                  {link}
-                </motion.a>
+                  <Link
+                    to={link.path}
+                    className="block px-4 py-3 text-brand-dark hover:bg-brand-violet/5 rounded-lg transition-colors font-poppins"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </motion.div>
               ))}
               <div className="px-4 py-3">
-                <Button 
-                  variant="primary"
-                  
-                  className="shadow-lg shadow-brand-violet/20"
-                >
-                  Get a Quote
-                </Button>
+                <Link to="/contact">
+                  <Button
+                    variant="primary"
+                    className="shadow-lg shadow-brand-violet/20"
+                  >
+                    Get a Quote
+                  </Button>
+                </Link>
               </div>
             </div>
           </motion.div>

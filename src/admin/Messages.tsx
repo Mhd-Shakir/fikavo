@@ -6,7 +6,7 @@ interface Message {
   _id: string;
   name: string;
   email: string;
-  phone?: string;
+  phone?: number;
   message: string;
   createdAt?: string;
 }
