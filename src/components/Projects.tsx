@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowUpRight, MoveRight, Sparkles } from "lucide-react";
+import React from "react";
+import { motion } from "framer-motion";
+import { Sparkles, MoveRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // --- SectionHeader with animation & gradient text ---
 interface SectionHeaderProps {
@@ -99,14 +100,8 @@ const projectsData: Project[] = [
 ];
 
 const Portfolio: React.FC = () => {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedProject = projectsData.find((p) => p.id === selectedId);
-
   return (
-    <section
-      
-      className="py-24 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/50 relative overflow-hidden"
-    >
+    <section className="py-24 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/50 relative overflow-hidden">
       {/* Background patterns */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(180deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
@@ -149,9 +144,7 @@ const Portfolio: React.FC = () => {
           {projectsData.map((project, idx) => (
             <motion.div
               key={project.id}
-              layoutId={project.id}
-              onClick={() => setSelectedId(project.id)}
-              className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 h-80"
+              className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-80 cursor-default"
               whileHover={{ y: -8 }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -163,6 +156,7 @@ const Portfolio: React.FC = () => {
                 className="absolute inset-0 w-full h-full object-cover"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.6 }}
+                draggable={false}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10" />
               <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
@@ -170,93 +164,19 @@ const Portfolio: React.FC = () => {
                   <h3 className="text-white text-2xl font-bold font-poppins">
                     {project.title}
                   </h3>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors">
+                  <Link to='/projects'>
+                  <div
+                    className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors pointer-events-none"
+                    aria-hidden="true"
+                  >
                     <MoveRight className="text-white" size={20} />
                   </div>
+                  </Link>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-
-        {/* Modal */}
-        <AnimatePresence>
-          {selectedId && selectedProject && (
-            <>
-              <motion.div
-                onClick={() => setSelectedId(null)}
-                className="fixed inset-0 bg-black/70 z-40 backdrop-blur-md"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              />
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <motion.div
-                  layoutId={selectedId}
-                  className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                >
-                  <div className="md:w-1/2 relative">
-                    <div className="h-64 md:h-full">
-                      <img
-                        src={selectedProject.image}
-                        alt={selectedProject.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <motion.button
-                      onClick={() => setSelectedId(null)}
-                      className="absolute top-4 right-4 p-2 bg-white/80 rounded-full text-gray-700 hover:bg-white"
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <X size={24} />
-                    </motion.button>
-                  </div>
-
-                  <div className="md:w-1/2 p-6 md:p-8 overflow-y-auto max-h-[80vh]">
-                    <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                      {selectedProject.title}
-                    </h2>
-
-                    <p className="text-gray-600 leading-relaxed mb-8 text-lg">
-                      {selectedProject.description}
-                    </p>
-
-                    <div className="mb-8">
-                      <h4 className="text-xl font-semibold text-gray-900 mb-4">
-                        Technologies
-                      </h4>
-                      <div className="flex flex-wrap gap-3">
-                        {selectedProject.tags.map((tag, idx) => (
-                          <motion.span
-                            key={tag}
-                            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-full"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                          >
-                            {tag}
-                          </motion.span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <motion.a
-                      href="#"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl text-lg shadow-lg hover:shadow-xl transition-all"
-                    >
-                      View Live Project <ArrowUpRight size={24} />
-                    </motion.a>
-                  </div>
-                </motion.div>
-              </div>
-            </>
-          )}
-        </AnimatePresence>
       </div>
     </section>
   );

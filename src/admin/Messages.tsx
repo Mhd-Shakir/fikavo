@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Trash2, MailOpen, Mail, Phone, Copy } from "lucide-react";
 
 interface Message {
   _id: string;
   name: string;
   email: string;
-  phone?: number;
+  phone?: string | number;
   message: string;
   createdAt?: string;
+  read?: boolean;
 }
 
-const Messages = () => {
+const Messages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showDeleteForId, setShowDeleteForId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const apiBase = import.meta.env.VITE_API_BASE_URL;
@@ -34,13 +36,13 @@ const Messages = () => {
         headers: getAuthHeaders(),
       });
 
-      const data = await res.json();
-
       if (res.status === 401) {
         localStorage.removeItem("adminToken");
         navigate("/admin");
         return;
       }
+
+      const data = await res.json();
 
       if (res.ok && data.success) {
         setMessages(data.messages);
@@ -123,17 +125,77 @@ const Messages = () => {
     });
   };
 
+  const toggleRead = async (id: string, nextRead: boolean) => {
+    try {
+      setUpdatingId(id);
+      const res = await fetch(`${apiBase}/api/contact/messages/${id}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ read: nextRead }),
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("adminToken");
+        navigate("/admin");
+        return;
+      }
+
+      if (res.ok) {
+        setMessages((prev) =>
+          prev.map((m) => (m._id === id ? { ...m, read: nextRead } : m))
+        );
+      } else {
+        console.error("Failed to update read status");
+      }
+    } catch (err) {
+      console.error("Update read error:", err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      console.error("Clipboard copy failed", e);
+    }
+  };
+
+  const normalizedSearch = search.trim().toLowerCase();
+
+  const filteredAndSorted = messages
+    .filter((msg) => {
+      const name = msg.name || "";
+      const email = msg.email || "";
+      const phone = msg.phone ? String(msg.phone) : "";
+      const blob = `${name} ${email} ${phone}`.toLowerCase();
+      return !normalizedSearch || blob.includes(normalizedSearch);
+    })
+    .sort((a, b) => {
+      // Unread first
+      const aUnread = a.read ? 1 : 0;
+      const bUnread = b.read ? 1 : 0;
+      if (aUnread !== bUnread) return aUnread - bUnread;
+      // Then newest first
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Contact Messages</h2>
-        <button
-          onClick={deleteSelected}
-          disabled={selected.size === 0}
-          className="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 disabled:opacity-50"
-        >
-          Delete Selected
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={deleteSelected}
+            disabled={selected.size === 0}
+            className="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 disabled:opacity-50"
+          >
+            Delete Selected
+          </button>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -146,66 +208,135 @@ const Messages = () => {
         />
       </div>
 
-      <div className="grid gap-6">
-        {messages
-          .filter((msg) =>
-            [msg.name, msg.email, msg.phone].join(" ").toLowerCase().includes(search.toLowerCase())
-          )
-          .map((msg) => (
-            <div
-              key={msg._id}
-              className="bg-white border shadow-md rounded-xl p-5 relative"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-start gap-4">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(msg._id)}
-                    onChange={() => toggleSelect(msg._id)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
-                    <p className="text-sm text-blue-600 hover:underline">
-                      <a href={`mailto:${msg.email}`}>{msg.email}</a>
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      phone: {msg.phone || "N/A"}
-                    </p>
-                    <p className="text-gray-700 mt-2">
-                      <strong>Message:</strong> {msg.message}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      {msg.createdAt && new Date(msg.createdAt).toLocaleString()}
-                    </p>
+      {filteredAndSorted.length === 0 ? (
+        <div className="text-gray-600 text-center py-16 border rounded-xl bg-white">
+          No messages found.
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {filteredAndSorted.map((msg) => {
+            const phoneStr = msg.phone ? String(msg.phone) : "";
+            const telHref = phoneStr ? `tel:${phoneStr.replace(/\s+/g, "")}` : undefined;
+            const isUnread = !msg.read;
+
+            return (
+              <div
+                key={msg._id}
+                className={`relative bg-white border rounded-xl p-5 shadow-md ${
+                  isUnread ? "border-indigo-200 bg-indigo-50/40" : ""
+                }`}
+              >
+                {/* Unread dot */}
+                {isUnread && (
+                  <span className="absolute left-3 top-3 inline-block w-2 h-2 rounded-full bg-indigo-500" />
+                )}
+
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(msg._id)}
+                      onChange={() => toggleSelect(msg._id)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${
+                            isUnread
+                              ? "bg-indigo-100 text-indigo-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {isUnread ? "Unread" : "Read"}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-blue-600 hover:underline">
+                        <a href={`mailto:${msg.email}`}>{msg.email}</a>
+                      </p>
+
+                      <div className="mt-1 flex items-center gap-2 text-sm text-gray-700">
+                        <Phone size={16} className="text-gray-500" />
+                        {phoneStr ? (
+                          <>
+                            <a
+                              className="hover:underline"
+                              href={telHref}
+                              onClick={(e) => {
+                                if (!telHref) e.preventDefault();
+                              }}
+                            >
+                              {phoneStr}
+                            </a>
+                            <button
+                              onClick={() => copyToClipboard(phoneStr)}
+                              className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700"
+                              title="Copy phone number"
+                            >
+                              <Copy size={14} />
+                              <span className="text-xs">Copy</span>
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-gray-500">N/A</span>
+                        )}
+                      </div>
+
+                      <p className="text-gray-700 mt-3">
+                        <strong>Message:</strong> {msg.message}
+                      </p>
+
+                      <p className="text-xs text-gray-400 mt-2">
+                        {msg.createdAt && new Date(msg.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right space-y-2">
+                    <button
+                      onClick={() => toggleRead(msg._id, !msg.read)}
+                      disabled={updatingId === msg._id}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm border transition ${
+                        isUnread
+                          ? "border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      } disabled:opacity-50`}
+                      title={isUnread ? "Mark as read" : "Mark as unread"}
+                    >
+                      {isUnread ? <MailOpen size={16} /> : <Mail size={16} />}
+                      {isUnread ? "Mark as read" : "Mark as unread"}
+                    </button>
+
+                    <div>
+                      <button
+                        onClick={() =>
+                          setShowDeleteForId(
+                            showDeleteForId === msg._id ? null : msg._id
+                          )
+                        }
+                        className="text-indigo-600 text-sm hover:underline font-bold"
+                      >
+                        {showDeleteForId === msg._id ? "Cancel" : "Delete"}
+                      </button>
+
+                      {showDeleteForId === msg._id && (
+                        <button
+                          onClick={() => deleteMessage(msg._id)}
+                          className="ml-3 inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm"
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                <div className="text-right space-y-2">
-                  <button
-                    onClick={() =>
-                      setShowDeleteForId(
-                        showDeleteForId === msg._id ? null : msg._id
-                      )
-                    }
-                    className="text-indigo-600 text-sm hover:underline font-bold"
-                  >
-                    {showDeleteForId === msg._id ? "Cancel" : "Delete"}
-                  </button>
-
-                  {showDeleteForId === msg._id && (
-                    <button
-                      onClick={() => deleteMessage(msg._id)}
-                      className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded mt-2 text-sm"
-                    >
-                      <Trash2 size={16} /> Delete
-                    </button>
-                  )}
-                </div>
               </div>
-            </div>
-          ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

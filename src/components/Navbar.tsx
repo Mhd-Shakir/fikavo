@@ -51,7 +51,7 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-8">
+            <div className="ml-10 flex items-center space-x-8 ">
               {navLinks.map((link, index) => (
                 <motion.div
                   key={link.path}
@@ -65,12 +65,13 @@ const Navbar: React.FC = () => {
                 >
                   <Link
                     to={link.path}
-                    className="relative text-brand-dark px-3 py-2 text-sm font-medium font-poppins group"
+                    className="relative inline-flex items-center text-brand-dark px-3 py-2 text-sm font-medium font-poppins group"
                   >
                     {link.label}
-                    <motion.span
-                      className="absolute left-0 bottom-0 h-0.5 bg-brand-violet origin-bottom-right transform scale-x-0 group-hover:origin-bottom-left group-hover:scale-x-100 transition-transform duration-300 ease-out"
-                      layoutId={`nav-underline-${index}`}
+                    <span
+                      className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 w-full bg-brand-violet
+               origin-right scale-x-0 group-hover:origin-left group-hover:scale-x-100
+               transition-transform duration-300 ease-out"
                     />
                   </Link>
                 </motion.div>
