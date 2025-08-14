@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, MailOpen, Mail, Phone, Copy } from "lucide-react";
+import { Trash2, Phone, Copy } from "lucide-react";
 
 interface Message {
   _id: string;
   name: string;
   email: string;
   phone?: string | number;
+  // In case API uses other keys for phone:
+  phoneNumber?: string | number;
+  phone_no?: string | number;
+  phoneNo?: string | number;
+  mobile?: string | number;
+  contact?: string | number;
+  contactNumber?: string | number;
+  tel?: string | number;
+
   message: string;
   createdAt?: string;
   read?: boolean;
@@ -125,7 +134,8 @@ const Messages: React.FC = () => {
     });
   };
 
-  const toggleRead = async (id: string, nextRead: boolean) => {
+  // Read/unread via checkbox
+  const setRead = async (id: string, nextRead: boolean) => {
     try {
       setUpdatingId(id);
       const res = await fetch(`${apiBase}/api/contact/messages/${id}`, {
@@ -141,9 +151,7 @@ const Messages: React.FC = () => {
       }
 
       if (res.ok) {
-        setMessages((prev) =>
-          prev.map((m) => (m._id === id ? { ...m, read: nextRead } : m))
-        );
+        setMessages((prev) => prev.map((m) => (m._id === id ? { ...m, read: nextRead } : m)));
       } else {
         console.error("Failed to update read status");
       }
@@ -152,6 +160,26 @@ const Messages: React.FC = () => {
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  // Extract phone from various possible API fields
+  const getPhone = (msg: Message): string => {
+    const candidate =
+      msg.phone ??
+      msg.phoneNumber ??
+      msg.phone_no ??
+      msg.phoneNo ??
+      msg.mobile ??
+      msg.contact ??
+      msg.contactNumber ??
+      msg.tel ??
+      "";
+    return candidate !== undefined && candidate !== null ? String(candidate) : "";
+  };
+
+  const getTelHref = (phone: string): string | undefined => {
+    const sanitized = phone.replace(/[^\d+]/g, "");
+    return sanitized ? `tel:${sanitized}` : undefined;
   };
 
   const copyToClipboard = async (text: string) => {
@@ -166,10 +194,7 @@ const Messages: React.FC = () => {
 
   const filteredAndSorted = messages
     .filter((msg) => {
-      const name = msg.name || "";
-      const email = msg.email || "";
-      const phone = msg.phone ? String(msg.phone) : "";
-      const blob = `${name} ${email} ${phone}`.toLowerCase();
+      const blob = `${msg.name || ""} ${msg.email || ""} ${getPhone(msg)}`.toLowerCase();
       return !normalizedSearch || blob.includes(normalizedSearch);
     })
     .sort((a, b) => {
@@ -215,8 +240,8 @@ const Messages: React.FC = () => {
       ) : (
         <div className="grid gap-6">
           {filteredAndSorted.map((msg) => {
-            const phoneStr = msg.phone ? String(msg.phone) : "";
-            const telHref = phoneStr ? `tel:${phoneStr.replace(/\s+/g, "")}` : undefined;
+            const phoneStr = getPhone(msg);
+            const telHref = getTelHref(phoneStr);
             const isUnread = !msg.read;
 
             return (
@@ -233,12 +258,14 @@ const Messages: React.FC = () => {
 
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-start gap-4">
+                    {/* selection checkbox (bulk delete) */}
                     <input
                       type="checkbox"
                       checked={selected.has(msg._id)}
                       onChange={() => toggleSelect(msg._id)}
                       className="mt-1"
                     />
+
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
@@ -294,27 +321,23 @@ const Messages: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="text-right space-y-2">
-                    <button
-                      onClick={() => toggleRead(msg._id, !msg.read)}
-                      disabled={updatingId === msg._id}
-                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm border transition ${
-                        isUnread
-                          ? "border-indigo-300 text-indigo-700 hover:bg-indigo-50"
-                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                      } disabled:opacity-50`}
-                      title={isUnread ? "Mark as read" : "Mark as unread"}
-                    >
-                      {isUnread ? <MailOpen size={16} /> : <Mail size={16} />}
-                      {isUnread ? "Mark as read" : "Mark as unread"}
-                    </button>
+                  {/* Read checkbox + delete */}
+                  <div className="text-right space-y-3">
+                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={!!msg.read}
+                        onChange={(e) => setRead(msg._id, e.target.checked)}
+                        disabled={updatingId === msg._id}
+                        className="h-4 w-4"
+                      />
+                      <span>{msg.read ? "Read" : "Unread"}</span>
+                    </label>
 
                     <div>
                       <button
                         onClick={() =>
-                          setShowDeleteForId(
-                            showDeleteForId === msg._id ? null : msg._id
-                          )
+                          setShowDeleteForId(showDeleteForId === msg._id ? null : msg._id)
                         }
                         className="text-indigo-600 text-sm hover:underline font-bold"
                       >
