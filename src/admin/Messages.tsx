@@ -6,82 +6,67 @@ interface Message {
   _id: string;
   name: string;
   email: string;
-
-  // Common variants the API might use
-  phone?: string | number;
-  phoneNumber?: string | number;
-  phone_number?: string | number;
-  phoneNo?: string | number;
-  phone_no?: string | number;
-  mobile?: string | number;
-  mobileNumber?: string | number;
-  contact?: string | number;
-  contactNumber?: string | number;
-  tel?: string | number;
-  number?: string | number;
-  whatsapp?: string | number;
-  whatsappNumber?: string | number;
-  whatsApp?: string | number;
-  whatsAppNumber?: string | number;
-
-  // It might even be nested under an object:
-  contactDetails?: any;
-  data?: any;
-  form?: any;
-  details?: any;
-  payload?: any;
-
+  // The API may return phone under many possible keys or nested paths.
+  [key: string]: any;
   message: string;
   createdAt?: string;
   read?: boolean;
 }
 
-const candidatePhoneKeys = [
-  "phone",
-  "phoneNumber",
-  "phone_number",
-  "phoneNo",
-  "phone_no",
-  "mobile",
-  "mobileNumber",
-  "contact",
-  "contactNumber",
-  "tel",
-  "number",
-  "whatsapp",
-  "whatsappNumber",
-  "whatsApp",
-  "whatsAppNumber",
-];
+const phoneKeyRegex = /(phone|mobile|contact|tel|whats)/i;
 
-const candidateNestedPaths = [
-  "contact.phone",
-  "contact.phoneNumber",
-  "contact.number",
-  "contactDetails.phone",
-  "contactDetails.phoneNumber",
-  "data.phone",
-  "form.phone",
-  "details.phone",
-  "payload.phone",
-];
+// Deep scan to find a phone-like value by key name first, then by value shape
+function findPhoneDeep(obj: any): { value: string; path: string } {
+  if (!obj || typeof obj !== "object") return { value: "", path: "" };
 
-const getValueByPath = (obj: any, path: string) =>
-  path.split(".").reduce((acc, key) => (acc != null ? acc[key] : undefined), obj);
+  const visited = new Set<any>();
 
-const normalizePhone = (msg: any): string => {
-  // 1) flat keys
-  for (const k of candidatePhoneKeys) {
-    const v = msg?.[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+  // 1) Prefer matching by key names
+  const q1: Array<{ o: any; path: string }> = [{ o: obj, path: "" }];
+  while (q1.length) {
+    const { o, path } = q1.shift()!;
+    if (!o || typeof o !== "object") continue;
+    if (visited.has(o)) continue;
+    visited.add(o);
+
+    for (const [k, v] of Object.entries(o)) {
+      const p = path ? `${path}.${k}` : k;
+      if (v == null) continue;
+      if (typeof v === "string" || typeof v === "number") {
+        if (phoneKeyRegex.test(k) && String(v).trim() !== "") {
+          return { value: String(v).trim(), path: p };
+        }
+      } else if (typeof v === "object") {
+        q1.push({ o: v, path: p });
+      }
+    }
   }
-  // 2) nested paths
-  for (const p of candidateNestedPaths) {
-    const v = getValueByPath(msg, p);
-    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+
+  // 2) Fallback: find any value that "looks" like a phone (>= 7 digits after stripping)
+  visited.clear();
+  const q2: Array<{ o: any; path: string }> = [{ o: obj, path: "" }];
+  while (q2.length) {
+    const { o, path } = q2.shift()!;
+    if (!o || typeof o !== "object") continue;
+    if (visited.has(o)) continue;
+    visited.add(o);
+
+    for (const [k, v] of Object.entries(o)) {
+      const p = path ? `${path}.${k}` : k;
+      if (v == null) continue;
+      if (typeof v === "string" || typeof v === "number") {
+        const s = String(v).replace(/[^\d+]/g, "");
+        if (s.length >= 7) {
+          return { value: String(v).trim(), path: p };
+        }
+      } else if (typeof v === "object") {
+        q2.push({ o: v, path: p });
+      }
+    }
   }
-  return "";
-};
+
+  return { value: "", path: "" };
+}
 
 const telHrefFrom = (phone: string): string | undefined => {
   const sanitized = phone.replace(/[^\d+]/g, "");
@@ -121,10 +106,14 @@ const Messages: React.FC = () => {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setMessages(data.messages);
-        // Optional debug: inspect what keys are present
-        // console.debug("Sample message keys:", Object.keys(data.messages?.[0] ?? {}));
-        // console.debug("Sample message value:", data.messages?.[0]);
+        setMessages(data.messages || []);
+        // Debug: see what the backend actually returns for the first item
+        if ((data.messages || []).length) {
+          // eslint-disable-next-line no-console
+          console.log("Sample message keys:", Object.keys(data.messages[0]));
+          // eslint-disable-next-line no-console
+          console.log("Sample message object:", data.messages[0]);
+        }
       } else {
         console.error("Fetch failed:", data.message || "Unknown error");
       }
@@ -236,7 +225,7 @@ const Messages: React.FC = () => {
 
   const filteredAndSorted = messages
     .filter((msg) => {
-      const phoneStr = normalizePhone(msg);
+      const phoneStr = findPhoneDeep(msg).value;
       const blob = `${msg.name || ""} ${msg.email || ""} ${phoneStr}`.toLowerCase();
       return !normalizedSearch || blob.includes(normalizedSearch);
     })
@@ -291,9 +280,18 @@ const Messages: React.FC = () => {
       ) : (
         <div className="grid gap-6">
           {filteredAndSorted.map((msg) => {
-            const phoneStr = normalizePhone(msg);
+            const { value: phoneStr, path: phonePath } = findPhoneDeep(msg);
             const telHref = telHrefFrom(phoneStr);
             const isUnread = !msg.read;
+
+            if (!phoneStr) {
+              // Helpful console hint so you can see where the phone is (or isn't) in the object
+              // eslint-disable-next-line no-console
+              console.warn("No phone found for message", msg._id, "keys:", Object.keys(msg));
+            } else {
+              // eslint-disable-next-line no-console
+              console.log(`Phone for message ${msg._id}:`, phoneStr, "(path:", phonePath, ")");
+            }
 
             return (
               <div
@@ -309,7 +307,7 @@ const Messages: React.FC = () => {
 
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-start gap-4">
-                    {/* Selection (bulk delete) */}
+                    {/* selection checkbox (bulk delete) */}
                     <input
                       type="checkbox"
                       checked={selected.has(msg._id)}
