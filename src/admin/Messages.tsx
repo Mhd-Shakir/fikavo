@@ -8,12 +8,10 @@ interface Message {
   email: string;
   message: string;
   createdAt?: string;
-  read?: boolean;
-  // Backend may send different fields; allow any extra keys
-  [key: string]: any;
+  [key: string]: any; // allow extra fields from API
 }
 
-// Keys we consider as legit phone fields (case-insensitive)
+// Valid phone keys (case-insensitive, use lowercase to compare)
 const PHONE_KEYS = new Set([
   "phone",
   "phonenumber",
@@ -26,19 +24,15 @@ const PHONE_KEYS = new Set([
   "contactnumber",
   "whatsapp",
   "whatsappnumber",
-  "whatsApp",
-  "whatsAppNumber",
 ]);
 
 const isIdLikeKey = (k: string) =>
   k === "_id" || k.toLowerCase() === "id" || /id$/i.test(k);
 
-// Value must contain only phone characters and 7–15 digits total
+// Accept values with digits and common phone symbols, 7–15 digits total, no letters
 const isLikelyPhoneValue = (v: string) => {
   const s = v.trim();
-  // Reject if it contains letters (ObjectIds have letters)
   if (/[a-z]/i.test(s)) return false;
-  // Only allow digits, spaces, dashes, parentheses, and leading +
   if (!/^[\d\s()+-]+$/.test(s)) return false;
   const digits = s.replace(/\D/g, "");
   return digits.length >= 7 && digits.length <= 15;
@@ -46,11 +40,9 @@ const isLikelyPhoneValue = (v: string) => {
 
 type QueueItem = { o: any; path: string };
 
-// BFS through nested objects/arrays, but only accept values that:
-// - come from a recognized phone key, and
-// - pass isLikelyPhoneValue
-const extractPhone = (msg: any): { value: string; path: string } => {
-  if (!msg || typeof msg !== "object") return { value: "", path: "" };
+// Scan nested objects/arrays; only accept values under valid phone keys
+const extractPhone = (msg: any): string => {
+  if (!msg || typeof msg !== "object") return "";
   const visited = new Set<any>();
   const q: QueueItem[] = [{ o: msg, path: "" }];
 
@@ -60,31 +52,26 @@ const extractPhone = (msg: any): { value: string; path: string } => {
     if (visited.has(o)) continue;
     visited.add(o);
 
-    const entries = Array.isArray(o) ? o.entries() : Object.entries(o);
+    const entries = Array.isArray(o) ? Array.from(o.entries()) : Object.entries(o);
 
     for (const entry of entries as any) {
-      const [k, v] = Array.isArray(o) ? entry : entry; // keep TS happy
-      const p = path ? `${path}.${k}` : String(k);
+      const [k, v] = entry;
+      if (isIdLikeKey(String(k)) || v == null) continue;
+
       const keyLower = String(k).toLowerCase();
-
-      // Skip obvious ID keys
-      if (isIdLikeKey(String(k))) continue;
-
-      if (v == null) continue;
 
       if (typeof v === "string" || typeof v === "number") {
         const s = String(v);
         if (PHONE_KEYS.has(keyLower) && isLikelyPhoneValue(s)) {
-          return { value: s.trim(), path: p };
+          return s.trim();
         }
       } else if (typeof v === "object") {
-        q.push({ o: v, path: p });
+        q.push({ o: v, path: path ? `${path}.${k}` : String(k) });
       }
     }
   }
 
-  // No acceptable phone found
-  return { value: "", path: "" };
+  return "";
 };
 
 const telHrefFrom = (phone: string): string | undefined => {
@@ -95,9 +82,9 @@ const telHrefFrom = (phone: string): string | undefined => {
 const Messages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set()); // bulk delete
+  const [received, setReceived] = useState<Set<string>>(new Set()); // UI highlight
   const [showDeleteForId, setShowDeleteForId] = useState<string | null>(null);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const apiBase = import.meta.env.VITE_API_BASE_URL;
@@ -108,7 +95,7 @@ const Messages: React.FC = () => {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-  };
+    };
 
   const fetchMessages = async () => {
     try {
@@ -123,7 +110,6 @@ const Messages: React.FC = () => {
       }
 
       const data = await res.json();
-
       if (res.ok && data.success) {
         setMessages(data.messages || []);
       } else {
@@ -146,7 +132,6 @@ const Messages: React.FC = () => {
 
   const deleteMessage = async (id: string) => {
     if (!confirm("Delete this message?")) return;
-
     try {
       const res = await fetch(`${apiBase}/api/contact/messages/${id}`, {
         method: "DELETE",
@@ -193,7 +178,7 @@ const Messages: React.FC = () => {
         console.error("Bulk delete failed");
       }
     } catch (err) {
-    console.error("Bulk delete error:", err);
+      console.error("Bulk delete error:", err);
     }
   };
 
@@ -205,49 +190,26 @@ const Messages: React.FC = () => {
     });
   };
 
-  // Read/unread via checkbox
-  const setRead = async (id: string, nextRead: boolean) => {
-    try {
-      setUpdatingId(id);
-      const res = await fetch(`${apiBase}/api/contact/messages/${id}`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ read: nextRead }),
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem("adminToken");
-        navigate("/admin");
-        return;
-      }
-
-      if (res.ok) {
-        setMessages((prev) => prev.map((m) => (m._id === id ? { ...m, read: nextRead } : m)));
-      } else {
-        console.error("Failed to update read status");
-      }
-    } catch (err) {
-      console.error("Update read error:", err);
-    } finally {
-      setUpdatingId(null);
-    }
+  const toggleReceived = (id: string) => {
+    setReceived((prev) => {
+      const copy = new Set(prev);
+      copy.has(id) ? copy.delete(id) : copy.add(id);
+      return copy;
+    });
   };
 
   const normalizedSearch = search.trim().toLowerCase();
 
   const filteredAndSorted = messages
     .filter((msg) => {
-      const phone = extractPhone(msg).value;
+      const phone = extractPhone(msg);
       const blob = `${msg.name || ""} ${msg.email || ""} ${phone}`.toLowerCase();
       return !normalizedSearch || blob.includes(normalizedSearch);
     })
     .sort((a, b) => {
-      const aUnread = a.read ? 1 : 0;
-      const bUnread = b.read ? 1 : 0;
-      if (aUnread !== bUnread) return aUnread - bUnread;
       const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return bTime - aTime;
+      return bTime - aTime; // newest first
     });
 
   const copyToClipboard = async (text: string) => {
@@ -262,15 +224,13 @@ const Messages: React.FC = () => {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Contact Messages</h2>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={deleteSelected}
-            disabled={selected.size === 0}
-            className="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 disabled:opacity-50"
-          >
-            Delete Selected
-          </button>
-        </div>
+        <button
+          onClick={deleteSelected}
+          disabled={selected.size === 0}
+          className="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 disabled:opacity-50"
+        >
+          Delete Selected
+        </button>
       </div>
 
       <div className="mb-6">
@@ -290,42 +250,30 @@ const Messages: React.FC = () => {
       ) : (
         <div className="grid gap-6">
           {filteredAndSorted.map((msg) => {
-            const { value: phoneStr } = extractPhone(msg);
+            const phoneStr = extractPhone(msg);
             const telHref = phoneStr ? telHrefFrom(phoneStr) : undefined;
-            const isUnread = !msg.read;
+            const isReceived = received.has(msg._id);
 
             return (
               <div
                 key={msg._id}
-                className={`relative bg-white border rounded-xl p-5 shadow-md ${
-                  isUnread ? "border-indigo-200 bg-indigo-50/40" : ""
+                className={`relative border rounded-xl p-5 shadow-md transition-colors ${
+                  isReceived ? "bg-emerald-50 border-emerald-300" : "bg-white border-gray-200"
                 }`}
               >
-                {isUnread && (
-                  <span className="absolute left-3 top-3 inline-block w-2 h-2 rounded-full bg-indigo-500" />
-                )}
-
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-start gap-4">
-                    {/* Selection (bulk delete) */}
+                    {/* Bulk-select checkbox (for Delete Selected) */}
                     <input
                       type="checkbox"
                       checked={selected.has(msg._id)}
                       onChange={() => toggleSelect(msg._id)}
                       className="mt-1"
+                      title="Select for bulk actions"
                     />
 
                     <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${
-                            isUnread ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {isUnread ? "Unread" : "Read"}
-                        </span>
-                      </div>
+                      <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
 
                       <p className="text-sm text-blue-600 hover:underline">
                         <a href={`mailto:${msg.email}`}>{msg.email}</a>
@@ -368,38 +316,35 @@ const Messages: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Read checkbox + delete */}
-                  <div className="text-right space-y-3">
-                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={!!msg.read}
-                        onChange={(e) => setRead(msg._id, e.target.checked)}
-                        disabled={updatingId === msg._id}
-                        className="h-4 w-4"
-                      />
-                      <span>{msg.read ? "Read" : "Unread"}</span>
-                    </label>
+                  {/* Received checkbox (turns card green) */}
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={isReceived}
+                      onChange={() => toggleReceived(msg._id)}
+                      className="h-4 w-4 accent-emerald-600"
+                    />
+                    <span>Received</span>
+                  </label>
 
-                    <div>
+                  <div className="text-right">
+                    <button
+                      onClick={() =>
+                        setShowDeleteForId(showDeleteForId === msg._id ? null : msg._id)
+                      }
+                      className="text-indigo-600 text-sm hover:underline font-bold"
+                    >
+                      {showDeleteForId === msg._id ? "Cancel" : "Delete"}
+                    </button>
+
+                    {showDeleteForId === msg._id && (
                       <button
-                        onClick={() =>
-                          setShowDeleteForId(showDeleteForId === msg._id ? null : msg._id)
-                        }
-                        className="text-indigo-600 text-sm hover:underline font-bold"
+                        onClick={() => deleteMessage(msg._id)}
+                        className="ml-3 inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm"
                       >
-                        {showDeleteForId === msg._id ? "Cancel" : "Delete"}
+                        <Trash2 size={16} /> Delete
                       </button>
-
-                      {showDeleteForId === msg._id && (
-                        <button
-                          onClick={() => deleteMessage(msg._id)}
-                          className="ml-3 inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm"
-                        >
-                          <Trash2 size={16} /> Delete
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
