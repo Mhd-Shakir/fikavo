@@ -6,67 +6,86 @@ interface Message {
   _id: string;
   name: string;
   email: string;
-  // The API may return phone under many possible keys or nested paths.
-  [key: string]: any;
   message: string;
   createdAt?: string;
   read?: boolean;
+  // Backend may send different fields; allow any extra keys
+  [key: string]: any;
 }
 
-const phoneKeyRegex = /(phone|mobile|contact|tel|whats)/i;
+// Keys we consider as legit phone fields (case-insensitive)
+const PHONE_KEYS = new Set([
+  "phone",
+  "phonenumber",
+  "phone_number",
+  "phoneno",
+  "phone_no",
+  "mobile",
+  "mobilenumber",
+  "tel",
+  "contactnumber",
+  "whatsapp",
+  "whatsappnumber",
+  "whatsApp",
+  "whatsAppNumber",
+]);
 
-// Deep scan to find a phone-like value by key name first, then by value shape
-function findPhoneDeep(obj: any): { value: string; path: string } {
-  if (!obj || typeof obj !== "object") return { value: "", path: "" };
+const isIdLikeKey = (k: string) =>
+  k === "_id" || k.toLowerCase() === "id" || /id$/i.test(k);
 
+// Value must contain only phone characters and 7–15 digits total
+const isLikelyPhoneValue = (v: string) => {
+  const s = v.trim();
+  // Reject if it contains letters (ObjectIds have letters)
+  if (/[a-z]/i.test(s)) return false;
+  // Only allow digits, spaces, dashes, parentheses, and leading +
+  if (!/^[\d\s()+-]+$/.test(s)) return false;
+  const digits = s.replace(/\D/g, "");
+  return digits.length >= 7 && digits.length <= 15;
+};
+
+type QueueItem = { o: any; path: string };
+
+// BFS through nested objects/arrays, but only accept values that:
+// - come from a recognized phone key, and
+// - pass isLikelyPhoneValue
+const extractPhone = (msg: any): { value: string; path: string } => {
+  if (!msg || typeof msg !== "object") return { value: "", path: "" };
   const visited = new Set<any>();
+  const q: QueueItem[] = [{ o: msg, path: "" }];
 
-  // 1) Prefer matching by key names
-  const q1: Array<{ o: any; path: string }> = [{ o: obj, path: "" }];
-  while (q1.length) {
-    const { o, path } = q1.shift()!;
+  while (q.length) {
+    const { o, path } = q.shift()!;
     if (!o || typeof o !== "object") continue;
     if (visited.has(o)) continue;
     visited.add(o);
 
-    for (const [k, v] of Object.entries(o)) {
-      const p = path ? `${path}.${k}` : k;
+    const entries = Array.isArray(o) ? o.entries() : Object.entries(o);
+
+    for (const entry of entries as any) {
+      const [k, v] = Array.isArray(o) ? entry : entry; // keep TS happy
+      const p = path ? `${path}.${k}` : String(k);
+      const keyLower = String(k).toLowerCase();
+
+      // Skip obvious ID keys
+      if (isIdLikeKey(String(k))) continue;
+
       if (v == null) continue;
+
       if (typeof v === "string" || typeof v === "number") {
-        if (phoneKeyRegex.test(k) && String(v).trim() !== "") {
-          return { value: String(v).trim(), path: p };
+        const s = String(v);
+        if (PHONE_KEYS.has(keyLower) && isLikelyPhoneValue(s)) {
+          return { value: s.trim(), path: p };
         }
       } else if (typeof v === "object") {
-        q1.push({ o: v, path: p });
+        q.push({ o: v, path: p });
       }
     }
   }
 
-  // 2) Fallback: find any value that "looks" like a phone (>= 7 digits after stripping)
-  visited.clear();
-  const q2: Array<{ o: any; path: string }> = [{ o: obj, path: "" }];
-  while (q2.length) {
-    const { o, path } = q2.shift()!;
-    if (!o || typeof o !== "object") continue;
-    if (visited.has(o)) continue;
-    visited.add(o);
-
-    for (const [k, v] of Object.entries(o)) {
-      const p = path ? `${path}.${k}` : k;
-      if (v == null) continue;
-      if (typeof v === "string" || typeof v === "number") {
-        const s = String(v).replace(/[^\d+]/g, "");
-        if (s.length >= 7) {
-          return { value: String(v).trim(), path: p };
-        }
-      } else if (typeof v === "object") {
-        q2.push({ o: v, path: p });
-      }
-    }
-  }
-
+  // No acceptable phone found
   return { value: "", path: "" };
-}
+};
 
 const telHrefFrom = (phone: string): string | undefined => {
   const sanitized = phone.replace(/[^\d+]/g, "");
@@ -107,13 +126,6 @@ const Messages: React.FC = () => {
 
       if (res.ok && data.success) {
         setMessages(data.messages || []);
-        // Debug: see what the backend actually returns for the first item
-        if ((data.messages || []).length) {
-          // eslint-disable-next-line no-console
-          console.log("Sample message keys:", Object.keys(data.messages[0]));
-          // eslint-disable-next-line no-console
-          console.log("Sample message object:", data.messages[0]);
-        }
       } else {
         console.error("Fetch failed:", data.message || "Unknown error");
       }
@@ -181,7 +193,7 @@ const Messages: React.FC = () => {
         console.error("Bulk delete failed");
       }
     } catch (err) {
-      console.error("Bulk delete error:", err);
+    console.error("Bulk delete error:", err);
     }
   };
 
@@ -225,16 +237,14 @@ const Messages: React.FC = () => {
 
   const filteredAndSorted = messages
     .filter((msg) => {
-      const phoneStr = findPhoneDeep(msg).value;
-      const blob = `${msg.name || ""} ${msg.email || ""} ${phoneStr}`.toLowerCase();
+      const phone = extractPhone(msg).value;
+      const blob = `${msg.name || ""} ${msg.email || ""} ${phone}`.toLowerCase();
       return !normalizedSearch || blob.includes(normalizedSearch);
     })
     .sort((a, b) => {
-      // Unread first
       const aUnread = a.read ? 1 : 0;
       const bUnread = b.read ? 1 : 0;
       if (aUnread !== bUnread) return aUnread - bUnread;
-      // Then newest first
       const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return bTime - aTime;
@@ -280,18 +290,9 @@ const Messages: React.FC = () => {
       ) : (
         <div className="grid gap-6">
           {filteredAndSorted.map((msg) => {
-            const { value: phoneStr, path: phonePath } = findPhoneDeep(msg);
-            const telHref = telHrefFrom(phoneStr);
+            const { value: phoneStr } = extractPhone(msg);
+            const telHref = phoneStr ? telHrefFrom(phoneStr) : undefined;
             const isUnread = !msg.read;
-
-            if (!phoneStr) {
-              // Helpful console hint so you can see where the phone is (or isn't) in the object
-              // eslint-disable-next-line no-console
-              console.warn("No phone found for message", msg._id, "keys:", Object.keys(msg));
-            } else {
-              // eslint-disable-next-line no-console
-              console.log(`Phone for message ${msg._id}:`, phoneStr, "(path:", phonePath, ")");
-            }
 
             return (
               <div
@@ -300,14 +301,13 @@ const Messages: React.FC = () => {
                   isUnread ? "border-indigo-200 bg-indigo-50/40" : ""
                 }`}
               >
-                {/* Unread dot */}
                 {isUnread && (
                   <span className="absolute left-3 top-3 inline-block w-2 h-2 rounded-full bg-indigo-500" />
                 )}
 
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-start gap-4">
-                    {/* selection checkbox (bulk delete) */}
+                    {/* Selection (bulk delete) */}
                     <input
                       type="checkbox"
                       checked={selected.has(msg._id)}
@@ -320,9 +320,7 @@ const Messages: React.FC = () => {
                         <p className="text-lg font-semibold text-gray-800">{msg.name}</p>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full ${
-                            isUnread
-                              ? "bg-indigo-100 text-indigo-700"
-                              : "bg-gray-100 text-gray-600"
+                            isUnread ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-600"
                           }`}
                         >
                           {isUnread ? "Unread" : "Read"}
