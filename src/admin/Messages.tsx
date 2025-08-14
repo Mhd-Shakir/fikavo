@@ -6,20 +6,87 @@ interface Message {
   _id: string;
   name: string;
   email: string;
+
+  // Common variants the API might use
   phone?: string | number;
-  // In case API uses other keys for phone:
   phoneNumber?: string | number;
-  phone_no?: string | number;
+  phone_number?: string | number;
   phoneNo?: string | number;
+  phone_no?: string | number;
   mobile?: string | number;
+  mobileNumber?: string | number;
   contact?: string | number;
   contactNumber?: string | number;
   tel?: string | number;
+  number?: string | number;
+  whatsapp?: string | number;
+  whatsappNumber?: string | number;
+  whatsApp?: string | number;
+  whatsAppNumber?: string | number;
+
+  // It might even be nested under an object:
+  contactDetails?: any;
+  data?: any;
+  form?: any;
+  details?: any;
+  payload?: any;
 
   message: string;
   createdAt?: string;
   read?: boolean;
 }
+
+const candidatePhoneKeys = [
+  "phone",
+  "phoneNumber",
+  "phone_number",
+  "phoneNo",
+  "phone_no",
+  "mobile",
+  "mobileNumber",
+  "contact",
+  "contactNumber",
+  "tel",
+  "number",
+  "whatsapp",
+  "whatsappNumber",
+  "whatsApp",
+  "whatsAppNumber",
+];
+
+const candidateNestedPaths = [
+  "contact.phone",
+  "contact.phoneNumber",
+  "contact.number",
+  "contactDetails.phone",
+  "contactDetails.phoneNumber",
+  "data.phone",
+  "form.phone",
+  "details.phone",
+  "payload.phone",
+];
+
+const getValueByPath = (obj: any, path: string) =>
+  path.split(".").reduce((acc, key) => (acc != null ? acc[key] : undefined), obj);
+
+const normalizePhone = (msg: any): string => {
+  // 1) flat keys
+  for (const k of candidatePhoneKeys) {
+    const v = msg?.[k];
+    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+  }
+  // 2) nested paths
+  for (const p of candidateNestedPaths) {
+    const v = getValueByPath(msg, p);
+    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+  }
+  return "";
+};
+
+const telHrefFrom = (phone: string): string | undefined => {
+  const sanitized = phone.replace(/[^\d+]/g, "");
+  return sanitized ? `tel:${sanitized}` : undefined;
+};
 
 const Messages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -55,6 +122,9 @@ const Messages: React.FC = () => {
 
       if (res.ok && data.success) {
         setMessages(data.messages);
+        // Optional debug: inspect what keys are present
+        // console.debug("Sample message keys:", Object.keys(data.messages?.[0] ?? {}));
+        // console.debug("Sample message value:", data.messages?.[0]);
       } else {
         console.error("Fetch failed:", data.message || "Unknown error");
       }
@@ -162,39 +232,12 @@ const Messages: React.FC = () => {
     }
   };
 
-  // Extract phone from various possible API fields
-  const getPhone = (msg: Message): string => {
-    const candidate =
-      msg.phone ??
-      msg.phoneNumber ??
-      msg.phone_no ??
-      msg.phoneNo ??
-      msg.mobile ??
-      msg.contact ??
-      msg.contactNumber ??
-      msg.tel ??
-      "";
-    return candidate !== undefined && candidate !== null ? String(candidate) : "";
-  };
-
-  const getTelHref = (phone: string): string | undefined => {
-    const sanitized = phone.replace(/[^\d+]/g, "");
-    return sanitized ? `tel:${sanitized}` : undefined;
-  };
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (e) {
-      console.error("Clipboard copy failed", e);
-    }
-  };
-
   const normalizedSearch = search.trim().toLowerCase();
 
   const filteredAndSorted = messages
     .filter((msg) => {
-      const blob = `${msg.name || ""} ${msg.email || ""} ${getPhone(msg)}`.toLowerCase();
+      const phoneStr = normalizePhone(msg);
+      const blob = `${msg.name || ""} ${msg.email || ""} ${phoneStr}`.toLowerCase();
       return !normalizedSearch || blob.includes(normalizedSearch);
     })
     .sort((a, b) => {
@@ -207,6 +250,14 @@ const Messages: React.FC = () => {
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return bTime - aTime;
     });
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      console.error("Clipboard copy failed", e);
+    }
+  };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -240,8 +291,8 @@ const Messages: React.FC = () => {
       ) : (
         <div className="grid gap-6">
           {filteredAndSorted.map((msg) => {
-            const phoneStr = getPhone(msg);
-            const telHref = getTelHref(phoneStr);
+            const phoneStr = normalizePhone(msg);
+            const telHref = telHrefFrom(phoneStr);
             const isUnread = !msg.read;
 
             return (
@@ -258,7 +309,7 @@ const Messages: React.FC = () => {
 
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-start gap-4">
-                    {/* selection checkbox (bulk delete) */}
+                    {/* Selection (bulk delete) */}
                     <input
                       type="checkbox"
                       checked={selected.has(msg._id)}
