@@ -18,7 +18,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle }) => (
     <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full mb-6">
       <Sparkles className="w-5 h-5 text-purple-600" />
       <span className="text-sm font-semibold text-purple-700 uppercase tracking-wider">
-        Portfolio
+        Projects
       </span>
     </div>
     <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 font-poppins mb-4">
@@ -33,14 +33,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle }) => (
   </motion.div>
 );
 
-// --- Project Data ---
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  tags: string[];
-}
+
 
 const projectsData: Project[] = [
   {

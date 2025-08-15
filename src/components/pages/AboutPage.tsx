@@ -23,6 +23,7 @@ import {
   PhoneCall,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import TechStack from '../ui/Techstack';
 
 type TeamMember = {
   name: string;
@@ -64,8 +65,8 @@ const AboutPage: React.FC = () => {
   };
 
   const stats = [
-    { k: '120+', v: 'Projects Delivered' },
-    { k: '98%', v: 'Client Satisfaction' },
+    { k: '150+', v: 'Projects Delivered' },
+    { k: '100%', v: 'Client Satisfaction' },
     { k: '2x', v: 'Faster Launch' },
     { k: '24/7', v: 'Support Options' },
   ];
@@ -310,7 +311,7 @@ const AboutPage: React.FC = () => {
           <motion.div variants={itemVariants} className="mt-8 flex items-center justify-center gap-3">
             <Link to="/contact" className="inline-block">
               <motion.span
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-brand-violet text-white font-semibold rounded-xl shadow-lg hover:shadow-xl"
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.96 }}
               >
@@ -378,125 +379,7 @@ const AboutPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Story / Timeline */}
-        <motion.div className="mb-16 md:mb-24" variants={containerVariants} initial="hidden" animate={controls}>
-          <motion.div className="text-center mb-10" variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full mb-4">
-              <Briefcase className="w-5 h-5 text-purple-600" />
-              <span className="text-sm font-semibold text-purple-700">OUR STORY</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">From idea to impact</h2>
-          </motion.div>
-
-          <div className="relative">
-            <div className="absolute left-4 md:left-1/2 md:-translate-x-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-gray-200 to-gray-300" />
-            <div className="space-y-8">
-              {timeline.map((t, i) => (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  className={`relative md:flex md:items-center md:gap-8 ${i % 2 ? 'md:flex-row-reverse' : ''}`}
-                >
-                  <div className="relative z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center mx-4 md:mx-0 md:absolute md:left-1/2 md:-translate-x-1/2">
-                    {t.icon}
-                  </div>
-
-                  <div className={`mt-3 md:mt-0 md:w-1/2 ${i % 2 ? 'md:pl-12' : 'md:pr-12'}`}>
-                    <div className="p-5 rounded-2xl border border-gray-200 bg-white/80">
-                      <div className="text-xs uppercase tracking-wide text-gray-500">{t.date}</div>
-                      <h3 className="text-lg font-semibold text-gray-900 mt-1">{t.title}</h3>
-                      <p className="text-gray-600 mt-2">{t.desc}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Team */}
-        <motion.div className="mb-16 md:mb-24" variants={containerVariants} initial="hidden" animate={controls}>
-          <motion.div className="text-center mb-10" variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-100 to-teal-100 rounded-full mb-4">
-              <Users className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-semibold text-blue-700">MEET THE TEAM</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Small, senior, and hands‑on</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {team.map((m, i) => (
-              <motion.div key={i} variants={itemVariants} className="p-6 rounded-2xl border border-gray-200 bg-white/80 hover:shadow-lg transition">
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-600 text-white flex items-center justify-center text-lg font-bold shadow">
-                    {initials(m.name)}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900">{m.name}</h3>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200 text-gray-700">{m.role}</span>
-                    </div>
-                    <div className="mt-1 text-sm text-gray-600 flex items-center gap-3 flex-wrap">
-                      <span className="inline-flex items-center gap-1"><MapPin className="w-4 h-4" /> {m.location}</span>
-                      <span className="inline-flex items-center gap-1"><Clock className="w-4 h-4" /> {m.timezone}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-gray-600 mt-3">{m.bio}</p>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {m.skills.map((s, idx) => (
-                    <span key={idx} className="text-xs px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 shadow-sm">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="mt-4 flex items-center gap-2">
-                  {m.socials?.github && (
-                    <a href={m.socials.github} target="_blank" rel="noreferrer" className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50">
-                      <Github className="w-4 h-4 text-gray-700" />
-                    </a>
-                  )}
-                  {m.socials?.linkedin && (
-                    <a href={m.socials.linkedin} target="_blank" rel="noreferrer" className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50">
-                      <Linkedin className="w-4 h-4 text-gray-700" />
-                    </a>
-                  )}
-                  {m.socials?.twitter && (
-                    <a href={m.socials.twitter} target="_blank" rel="noreferrer" className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50">
-                      <Twitter className="w-4 h-4 text-gray-700" />
-                    </a>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Tech stack */}
-        <motion.div className="mb-16 md:mb-24" variants={containerVariants} initial="hidden" animate={controls}>
-          <motion.div className="text-center mb-8" variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full mb-4">
-              <Globe className="w-5 h-5 text-purple-600" />
-              <span className="text-sm font-semibold text-purple-700">TOOLS & STACK</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Modern, proven, and scalable</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {techStack.map((t, i) => (
-              <motion.div
-                key={i}
-                variants={itemVariants}
-                className="flex items-center justify-center px-4 py-3 rounded-xl border border-gray-200 bg-white/80 hover:shadow-sm transition text-sm text-gray-700"
-              >
-                {t}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        <TechStack />
 
         {/* Testimonials */}
         <motion.div className="mb-16 md:mb-24" variants={containerVariants} initial="hidden" animate={controls}>
@@ -520,57 +403,7 @@ const AboutPage: React.FC = () => {
             ))}
           </div>
         </motion.div>
-
-        {/* FAQ */}
-        <motion.div className="mb-16 md:mb-24" variants={containerVariants} initial="hidden" animate={controls}>
-          <motion.div className="text-center mb-8" variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full mb-3">
-              <Shield className="w-5 h-5 text-purple-600" />
-              <span className="text-sm font-semibold text-purple-700">FAQ</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">You might be wondering...</h2>
-          </motion.div>
-
-          <div className="mx-auto max-w-4xl space-y-3">
-            {faq.map((f, i) => {
-              const isOpen = openFaq.has(i);
-              return (
-                <motion.div key={i} variants={itemVariants} className="rounded-2xl border border-gray-200 bg-white/80 overflow-hidden">
-                  <button
-                    onClick={() => toggleFaq(i)}
-                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-panel-${i}`}
-                  >
-                    <span className="font-semibold text-gray-900">{f.q}</span>
-                    <span
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full transition ${
-                        isOpen ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        id={`faq-panel-${i}`}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="px-5 pb-5"
-                      >
-                        <div className="text-gray-600">{f.a}</div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
+        
 
         {/* CTA */}
         <motion.div className="mt-10 text-center" variants={itemVariants} initial="hidden" animate={controls}>

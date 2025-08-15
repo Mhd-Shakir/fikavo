@@ -156,43 +156,7 @@ const Project: React.FC = () => {
         <SectionHeader
           title="Our Creative Projects"
           subtitle="Explore our carefully crafted projects that showcase our expertise and passion for innovation"
-        />
-
-        {/* Controls */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center gap-4 justify-between">
-          <div className="flex-1">
-            {/* <div className="relative">
-              <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search projects, tech, or keywords..."
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-200"
-              />
-            </div> */}
-          </div>
-
-          <div className="flex items-center gap-2 self-start md:self-auto">
-            <button
-              className={`px-3 py-2 rounded-lg border text-sm flex items-center gap-2 ${
-                view === "grid" ? "bg-gray-900 text-white border-gray-900" : "bg-white border-gray-200"
-              }`}
-              onClick={() => setView("grid")}
-              aria-label="Grid view"
-            >
-              <LayoutGrid className="w-4 h-4" /> Grid
-            </button>
-            <button
-              className={`px-3 py-2 rounded-lg border text-sm flex items-center gap-2 ${
-                view === "list" ? "bg-gray-900 text-white border-gray-900" : "bg-white border-gray-200"
-              }`}
-              onClick={() => setView("list")}
-              aria-label="List view"
-            >
-              <List className="w-4 h-4" /> List
-            </button>
-          </div>
-        </div>
+        />     
 
         {/* Count */}
         <div className="mb-4 text-sm text-gray-600">
@@ -230,9 +194,7 @@ const Project: React.FC = () => {
                     <h3 className="text-white text-2xl font-bold font-poppins">
                       {project.title}
                     </h3>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors">
-                      <MoveRight className="text-white" size={20} />
-                    </div>
+                    
                   </div>
                 </div>
               </motion.div>

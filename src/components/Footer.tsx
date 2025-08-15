@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Twitter, Linkedin, Github, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin, Twitter, Linkedin, Github, Instagram, X } from 'lucide-react';
 import logo from '../assets/fikavo logo final/fikavo_logo.png';
 
 type FooterLink = {
@@ -56,10 +56,10 @@ const Footer: React.FC = () => {
   ];
 
   const socialLinks: FooterLink[] = [
-    { label: 'X', href: '#', external: true },
-    { label: 'LinkedIn', href: '#', external: true },
-    { label: 'GitHub', href: '#', external: true },
-    { label: 'Instagram', href: '#', external: true }
+    { label: 'X', href: 'https://x.com/fikavocollectiv', external: true },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/fikavocollective/', external: true },
+    { label: 'GitHub', href: 'https://github.com/fikavocollective', external: true },
+    { label: 'Instagram', href: 'https://www.instagram.com/fikavocollective/', external: true }
   ];
 
   const socialIcons: Record<string, React.ReactNode> = {
@@ -196,7 +196,7 @@ const Footer: React.FC = () => {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-6">
+          <div className="flex flex-col-reverse md:flex-row justify-center items-center gap-6">
             <div className="text-center md:text-left text-gray-500 font-poppins text-sm">
               &copy; {currentYear} Fikavo Collective. All rights reserved.
             </div>

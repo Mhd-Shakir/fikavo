@@ -22,7 +22,8 @@ const Contact: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>("idle");
+  const [submissionStatus, setSubmissionStatus] =
+    useState<SubmissionStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const ref = useRef(null);
@@ -37,20 +38,19 @@ const Contact: React.FC = () => {
     switch (name) {
       case "name":
         if (!value.trim()) return "Name is required.";
-        if (value.trim().length < 2) return "Name must be at least 2 characters.";
+        if (value.trim().length < 2)
+          return "Name must be at least 2 characters.";
         return "";
       case "email":
         if (!value.trim()) return "Email is required.";
         // Simple email validation
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid email address.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          return "Enter a valid email address.";
         return "";
       case "phone":
         if (!value.trim()) return ""; // Phone optional; make it required if you prefer
-        if (!/^[0-9+()\-.\s]{7,20}$/.test(value)) return "Enter a valid phone number.";
-        return "";
-      case "message":
-        if (!value.trim()) return "Message is required.";
-        if (value.trim().length < 10) return "Message must be at least 10 characters.";
+        if (!/^[0-9+()\-.\s]{7,20}$/.test(value))
+          return "Enter a valid phone number.";
         return "";
       default:
         return "";
@@ -104,7 +104,10 @@ const Contact: React.FC = () => {
         `${import.meta.env.VITE_API_BASE_URL || ""}/api/contact`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify(formData),
         }
       );
@@ -115,7 +118,9 @@ const Contact: React.FC = () => {
         setFormData({ name: "", email: "", phone: "", message: "" });
         setErrors({});
       } else {
-        setErrorMessage(data.message || "Something went wrong. Please try again.");
+        setErrorMessage(
+          data.message || "Something went wrong. Please try again."
+        );
         setSubmissionStatus("error");
       }
     } catch {
@@ -208,7 +213,8 @@ const Contact: React.FC = () => {
             variants={itemVariants}
             className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2"
           >
-            Have an idea or project in mind? Fill out the form and we’ll get back to you within 24 hours.
+            Have an idea or project in mind? Fill out the form and we’ll get
+            back to you within 24 hours.
           </motion.p>
         </motion.div>
 
@@ -239,17 +245,18 @@ const Contact: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-4 sm:space-y-5"
+                noValidate
+              >
                 {/* Name */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Full Name <span className="text-red-500">*</span>
-                  </label>
                   <input
                     id="name"
                     type="text"
                     name="name"
-                    placeholder="John Doe"
+                    placeholder="Full Name"
                     required
                     autoComplete="name"
                     value={formData.name}
@@ -259,11 +266,17 @@ const Contact: React.FC = () => {
                     aria-invalid={Boolean(errors.name)}
                     aria-describedby={errors.name ? "name-error" : undefined}
                     className={`mt-1 w-full px-4 py-3 rounded-md bg-white text-black border ${
-                      errors.name ? "border-red-400 focus:border-red-500 focus:ring-red-300" : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
+                      errors.name
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-300"
+                        : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
                     } focus:ring-2 outline-none`}
                   />
                   {errors.name && (
-                    <p id="name-error" className="mt-1 text-sm text-red-600" aria-live="polite">
+                    <p
+                      id="name-error"
+                      className="mt-1 text-sm text-red-600"
+                      aria-live="polite"
+                    >
                       {errors.name}
                     </p>
                   )}
@@ -271,14 +284,11 @@ const Contact: React.FC = () => {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
                   <input
                     id="email"
                     type="email"
                     name="email"
-                    placeholder="you@example.com"
+                    placeholder="Email Address"
                     required
                     autoComplete="email"
                     value={formData.email}
@@ -288,11 +298,17 @@ const Contact: React.FC = () => {
                     aria-invalid={Boolean(errors.email)}
                     aria-describedby={errors.email ? "email-error" : undefined}
                     className={`mt-1 w-full px-4 py-3 rounded-md bg-white text-black border ${
-                      errors.email ? "border-red-400 focus:border-red-500 focus:ring-red-300" : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
+                      errors.email
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-300"
+                        : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
                     } focus:ring-2 outline-none`}
                   />
                   {errors.email && (
-                    <p id="email-error" className="mt-1 text-sm text-red-600" aria-live="polite">
+                    <p
+                      id="email-error"
+                      className="mt-1 text-sm text-red-600"
+                      aria-live="polite"
+                    >
                       {errors.email}
                     </p>
                   )}
@@ -300,14 +316,11 @@ const Contact: React.FC = () => {
 
                 {/* Phone */}
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                    Phone Number <span className="text-gray-400">(optional)</span>
-                  </label>
                   <input
                     id="phone"
                     type="tel"
                     name="phone"
-                    placeholder="+91 98765 43210"
+                    placeholder="Phone Number"
                     inputMode="tel"
                     autoComplete="tel"
                     pattern="[0-9+()\-.\s]{7,20}"
@@ -318,11 +331,17 @@ const Contact: React.FC = () => {
                     aria-invalid={Boolean(errors.phone)}
                     aria-describedby={errors.phone ? "phone-error" : undefined}
                     className={`mt-1 w-full px-4 py-3 rounded-md bg-white text-black border ${
-                      errors.phone ? "border-red-400 focus:border-red-500 focus:ring-red-300" : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
+                      errors.phone
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-300"
+                        : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
                     } focus:ring-2 outline-none`}
                   />
                   {errors.phone && (
-                    <p id="phone-error" className="mt-1 text-sm text-red-600" aria-live="polite">
+                    <p
+                      id="phone-error"
+                      className="mt-1 text-sm text-red-600"
+                      aria-live="polite"
+                    >
                       {errors.phone}
                     </p>
                   )}
@@ -330,33 +349,33 @@ const Contact: React.FC = () => {
 
                 {/* Message */}
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                    Message <span className="text-red-500">*</span>
-                  </label>
                   <textarea
                     id="message"
                     name="message"
-                    placeholder="Tell us a bit about your project..."
+                    placeholder="Project Details"
                     required
                     value={formData.message}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     aria-label="Project Details"
                     aria-invalid={Boolean(errors.message)}
-                    aria-describedby={errors.message ? "message-error" : "message-help"}
+                    aria-describedby={
+                      errors.message ? "message-error" : "message-help"
+                    }
                     maxLength={1000}
                     className={`mt-1 w-full px-4 py-3 rounded-md bg-white text-black border ${
-                      errors.message ? "border-red-400 focus:border-red-500 focus:ring-red-300" : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
+                      errors.message
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-300"
+                        : "border-gray-300 focus:border-purple-500 focus:ring-purple-300"
                     } focus:ring-2 outline-none h-28 sm:h-32 resize-none`}
                   />
-                  <div className="mt-1 flex items-center justify-between">
-                    <p id="message-help" className="text-xs text-gray-500">
-                      Minimum 10 characters. Max 1000.
-                    </p>
-                    <p className="text-xs text-gray-400">{formData.message.length}/1000</p>
-                  </div>
+
                   {errors.message && (
-                    <p id="message-error" className="mt-1 text-sm text-red-600" aria-live="polite">
+                    <p
+                      id="message-error"
+                      className="mt-1 text-sm text-red-600"
+                      aria-live="polite"
+                    >
                       {errors.message}
                     </p>
                   )}
@@ -368,12 +387,17 @@ const Contact: React.FC = () => {
                   disabled={submissionStatus === "loading"}
                   className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition"
                 >
-                  {submissionStatus === "loading" ? "Sending..." : "Send Message"}
+                  {submissionStatus === "loading"
+                    ? "Sending..."
+                    : "Send Message"}
                 </button>
 
                 {/* Top-level error */}
                 {submissionStatus === "error" && (
-                  <p className="text-red-600 text-sm text-center" aria-live="assertive">
+                  <p
+                    className="text-red-600 text-sm text-center"
+                    aria-live="assertive"
+                  >
                     {errorMessage}
                   </p>
                 )}
@@ -390,7 +414,10 @@ const Contact: React.FC = () => {
               <Mail className="w-6 h-6 text-purple-600" />
               <div>
                 <p className="font-semibold text-gray-800">Email Us</p>
-                <a href="mailto:fikavocollective@gmail.com" className="text-gray-600 break-all">
+                <a
+                  href="mailto:fikavocollective@gmail.com"
+                  className="text-gray-600 break-all"
+                >
                   fikavocollective@gmail.com
                 </a>
               </div>

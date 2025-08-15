@@ -324,7 +324,7 @@ const Messages: React.FC = () => {
                       onChange={() => toggleReceived(msg._id)}
                       className="h-4 w-4 accent-emerald-600"
                     />
-                    <span>Received</span>
+                    <span>Seen</span>
                   </label>
 
                   <div className="text-right">

@@ -53,7 +53,6 @@ type Service = {
 const ServicePage: React.FC = () => {
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [openRows, setOpenRows] = useState<Set<number>>(new Set());
-  const [openFaq, setOpenFaq] = useState<Set<number>>(new Set());
 
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
@@ -189,7 +188,7 @@ const ServicePage: React.FC = () => {
         "Brand Book (PDF)",
         "Social Starter Kit",
       ],
-      timeline: "2–3 weeks",
+      timeline: "7–14 Days",
       startingPrice: "$1,499+",
       stack: [
         "Figma",
@@ -219,7 +218,7 @@ const ServicePage: React.FC = () => {
         "Shopify/Stripe",
         "Analytics + SEO Basics",
       ],
-      timeline: "3–6 weeks",
+      timeline: "4–10 Days",
       startingPrice: "$2,999+",
       stack: [
         "Next.js",
@@ -311,7 +310,7 @@ const ServicePage: React.FC = () => {
         "Shorts Pack",
         "Title Cards + Captions",
       ],
-      timeline: "1–3 weeks/batch",
+      timeline: "3-7 Days",
       startingPrice: "$1,499+",
       stack: [
         "Premiere Pro",
@@ -348,32 +347,7 @@ const ServicePage: React.FC = () => {
     },
   ];
 
-  const faq = [
-    {
-      q: "How do we get started?",
-      a: "We begin with a free discovery call to understand goals and constraints. Then we share a phased plan with timelines, investment, and clear deliverables.",
-    },
-    {
-      q: "Do you offer ongoing support?",
-      a: "Yes. We offer retainers for updates, marketing, and optimization. You can also book ad‑hoc sprints for focused improvements.",
-    },
-    {
-      q: "What stacks do you use?",
-      a: "Next.js/React, Node, Postgres/MongoDB, Vercel/AWS, Shopify/Stripe, and the best-fit CMS. For AI: OpenAI, LangChain, Zapier/Make, n8n.",
-    },
-    {
-      q: "Can you work with our existing branding or site?",
-      a: "Absolutely. We can refresh what you have, integrate new features, or plan a staged migration to minimize risk.",
-    },
-    {
-      q: "How long do projects take?",
-      a: "Branding typically 2–3 weeks, websites 3–6 weeks, AI/automation 1–4 weeks, and marketing is ongoing. We can run parallel tracks when needed.",
-    },
-    {
-      q: "Can I hire you for design-only or dev-only?",
-      a: "Yes. We can plug into your team for just design, development, or consulting—whatever fits your current stage and resources.",
-    },
-  ];
+  
 
   const toggleRow = (id: number) => {
     setOpenRows((prev) => {
@@ -384,14 +358,6 @@ const ServicePage: React.FC = () => {
     });
   };
 
-  const toggleFaq = (i: number) => {
-    setOpenFaq((prev) => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
-      return next;
-    });
-  };
 
   return (
     <section
@@ -476,74 +442,7 @@ const ServicePage: React.FC = () => {
           </motion.p>
         </motion.div>
 
-        {/* FAQ near top */}
-        <motion.div
-          className="mb-16 md:mb-24"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={containerVariants}
-        >
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full mb-3">
-              <Quote className="w-4 h-4 text-purple-600" />
-              <span className="text-xs font-semibold text-purple-700">FAQ</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900">
-              You might be wondering...
-            </h3>
-          </div>
-
-          <div className="mx-auto max-w-4xl space-y-3">
-            {faq.map((f, i) => {
-              const isOpen = openFaq.has(i);
-              return (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  className="rounded-2xl border border-gray-200 bg-white/80 overflow-hidden"
-                >
-                  <button
-                    onClick={() => toggleFaq(i)}
-                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-panel-${i}`}
-                  >
-                    <span className="font-semibold text-gray-900">{f.q}</span>
-                    <span
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full transition ${
-                        isOpen
-                          ? "bg-gray-900 text-white"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </span>
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        id={`faq-panel-${i}`}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="px-5 pb-5"
-                      >
-                        <div className="text-gray-600">{f.a}</div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
+       
 
         {/* Target audience cards */}
         <motion.div
@@ -838,8 +737,8 @@ const ServicePage: React.FC = () => {
           variants={containerVariants}
         >
           {[
-            { k: "120+", v: "Projects Delivered" },
-            { k: "98%", v: "Client Satisfaction" },
+            { k: "150+", v: "Projects Delivered" },
+            { k: "100%", v: "Client Satisfaction" },
             { k: "2x", v: "Faster Launch" },
             { k: "24/7", v: "Support Options" },
           ].map((s, i) => (
