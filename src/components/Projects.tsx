@@ -171,6 +171,14 @@ const Portfolio: React.FC = () => {
           ))}
         </div>
       </div>
+      <button className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-20">
+        <Link
+          to="/projects"
+          className="mt-12 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-blue-700 transition-colors"
+        >
+          View All Projects
+        </Link>
+      </button>
     </section>
   );
 };

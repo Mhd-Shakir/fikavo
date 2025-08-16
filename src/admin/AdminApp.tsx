@@ -6,6 +6,7 @@ import Dashboard from './Dashboard';
 import Messages from './Messages';
 import AdminLogin from './Login'; // ✅ login page
 import ProtectedRoute from './ProtectedRoute'; // ✅ wrapper component
+import Projects from './Project';
 
 const AdminApp = () => {
   const token = localStorage.getItem('adminToken');
@@ -31,6 +32,15 @@ const AdminApp = () => {
             <ProtectedRoute token={token}>
               <AdminNavbar />
               <Messages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/projects"
+          element={
+            <ProtectedRoute token={token}>
+              <AdminNavbar />
+              <Projects />
             </ProtectedRoute>
           }
         />
