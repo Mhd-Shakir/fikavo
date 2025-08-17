@@ -11,6 +11,23 @@ interface Message {
   [key: string]: any; // allow extra fields from API
 }
 
+// Persist "Seen" message ids locally so highlight survives refresh
+const SEEN_KEY = "seenMessageIds";
+const loadSeen = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(SEEN_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+};
+const saveSeen = (s: Set<string>) => {
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...s]));
+  } catch {}
+};
+
 // Valid phone keys (case-insensitive, use lowercase to compare)
 const PHONE_KEYS = new Set([
   "phone",
@@ -83,7 +100,7 @@ const Messages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set()); // bulk delete
-  const [received, setReceived] = useState<Set<string>>(new Set()); // UI highlight
+  const [received, setReceived] = useState<Set<string>>(() => loadSeen()); // UI highlight (persisted)
   const [showDeleteForId, setShowDeleteForId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -95,7 +112,7 @@ const Messages: React.FC = () => {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-    };
+  };
 
   const fetchMessages = async () => {
     try {
@@ -145,6 +162,14 @@ const Messages: React.FC = () => {
       }
 
       if (res.ok) {
+        // also remove from "seen" if present
+        setReceived((prev) => {
+          if (!prev.has(id)) return prev;
+          const copy = new Set(prev);
+          copy.delete(id);
+          saveSeen(copy);
+          return copy;
+        });
         fetchMessages();
       } else {
         console.error("Failed to delete message");
@@ -172,6 +197,16 @@ const Messages: React.FC = () => {
       }
 
       if (res.ok) {
+        // remove deleted ids from "seen"
+        setReceived((prev) => {
+          const copy = new Set(prev);
+          let changed = false;
+          for (const id of selected) {
+            if (copy.delete(id)) changed = true;
+          }
+          if (changed) saveSeen(copy);
+          return copy;
+        });
         setSelected(new Set());
         fetchMessages();
       } else {
@@ -194,9 +229,21 @@ const Messages: React.FC = () => {
     setReceived((prev) => {
       const copy = new Set(prev);
       copy.has(id) ? copy.delete(id) : copy.add(id);
+      saveSeen(copy);
       return copy;
     });
   };
+
+  // Keep local "seen" ids pruned to only existing messages
+  useEffect(() => {
+    if (!messages.length) return;
+    setReceived((prev) => {
+      const existingIds = new Set(messages.map((m) => m._id));
+      const pruned = new Set([...prev].filter((id) => existingIds.has(id)));
+      if (pruned.size !== prev.size) saveSeen(pruned);
+      return pruned;
+    });
+  }, [messages]);
 
   const normalizedSearch = search.trim().toLowerCase();
 
