@@ -6,6 +6,7 @@ import Dashboard from './Dashboard';
 import Messages from './Messages';
 import AdminLogin from './Login'; // ✅ login page
 import ProtectedRoute from './ProtectedRoute'; // ✅ wrapper component
+import Projects from './Projects'; // ✅ projects page
 
 const AdminApp = () => {
   const token = localStorage.getItem('adminToken');
@@ -34,6 +35,8 @@ const AdminApp = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/projects" element={<Projects />} />
 
         {/* redirect unknown route */}
         <Route path="*" element={<Navigate to={token ? '/admin' : '/admin/login'} />} />
