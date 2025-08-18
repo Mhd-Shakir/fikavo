@@ -1,6 +1,5 @@
-// Frontend/src/admin/Projects.tsx
-import React, { useEffect, useState } from 'react';
-import { API_BASE, authHeaders } from '../lib/api';
+import React, { useEffect, useState } from "react";
+import { API_BASE, authHeaders } from "../lib/api";
 
 type Project = {
   _id: string;
@@ -11,8 +10,8 @@ type Project = {
 
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,31 +30,29 @@ const Projects: React.FC = () => {
     e.preventDefault();
     setError(null);
     if (!title || !file) {
-      setError('Title and image are required');
+      setError("Title and image are required");
       return;
     }
     setLoading(true);
     try {
       const fd = new FormData();
-      fd.append('title', title);
-      if (date) fd.append('date', date);
-      fd.append('image', file);
+      fd.append("title", title);
+      if (date) fd.append("date", date);
+      fd.append("image", file);
 
       const res = await fetch(`${API_BASE}/api/projects`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          ...authHeaders(),
+          ...authHeaders(), // ✅ Attach token
         },
         body: fd,
       });
 
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.message || 'Upload failed');
-      }
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.message || "Upload failed");
 
-      setTitle('');
-      setDate('');
+      setTitle("");
+      setDate("");
       setFile(null);
       await load();
     } catch (e: any) {
@@ -66,17 +63,19 @@ const Projects: React.FC = () => {
   };
 
   const onDelete = async (id: string) => {
-    if (!confirm('Delete this project?')) return;
+    if (!confirm("Delete this project?")) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/projects/${id}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(), // ✅ Attach token
+        },
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.message || 'Delete failed');
-      }
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.message || "Delete failed");
+
       setProjects((p) => p.filter((x) => x._id !== id));
     } catch (e: any) {
       setError(e.message);
@@ -128,18 +127,22 @@ const Projects: React.FC = () => {
           disabled={loading}
           className="bg-black text-white px-4 py-2 rounded disabled:opacity-50"
         >
-          {loading ? 'Uploading...' : 'Upload'}
+          {loading ? "Uploading..." : "Upload"}
         </button>
       </form>
 
       <div className="grid gap-4 md:grid-cols-3">
         {projects.map((p) => (
           <div key={p._id} className="border rounded p-2">
-            <img src={p.image.url} alt={p.title} className="w-full h-48 object-cover rounded" />
+            <img
+              src={p.image.url}
+              alt={p.title}
+              className="w-full h-48 object-cover rounded"
+            />
             <div className="mt-2">
               <div className="font-medium">{p.title}</div>
               <div className="text-xs text-gray-500">
-                {new Date(p.date || p as any).toLocaleDateString()}
+                {new Date(p.date).toLocaleDateString()}
               </div>
               <button
                 onClick={() => onDelete(p._id)}
