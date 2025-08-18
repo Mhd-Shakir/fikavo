@@ -92,17 +92,17 @@
 
 // export default AdminLogin;
 import React, { useState } from "react";
-import { API_BASE } from "../lib/api";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../lib/api";
 
-const Login: React.FC = () => {
+const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -117,23 +117,23 @@ const Login: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
 
-      // ✅ Save token
-      localStorage.setItem("token", data.token);
+      // ✅ Save exactly as "adminToken"
+      localStorage.setItem("adminToken", data.token);
 
-      // Redirect to admin/projects
+      // Go to admin/projects (or wherever you want)
       navigate("/admin/projects");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Server error. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <form
-        onSubmit={onSubmit}
-        className="w-80 border rounded p-6 space-y-4 bg-white shadow"
+        onSubmit={handleLogin}
+        className="w-full max-w-sm space-y-4 border rounded p-6 bg-white"
       >
         <h1 className="text-xl font-bold">Admin Login</h1>
 
@@ -141,10 +141,10 @@ const Login: React.FC = () => {
           <label className="block text-sm">Email</label>
           <input
             type="email"
+            className="border px-2 py-1 w-full"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="border px-2 py-1 w-full"
           />
         </div>
 
@@ -152,10 +152,10 @@ const Login: React.FC = () => {
           <label className="block text-sm">Password</label>
           <input
             type="password"
+            className="border px-2 py-1 w-full"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="border px-2 py-1 w-full"
           />
         </div>
 
@@ -173,5 +173,5 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default AdminLogin;
 

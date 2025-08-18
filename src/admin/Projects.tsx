@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { API_BASE, authHeaders } from "../lib/api";
 
+
 type Project = {
   _id: string;
   title: string;
@@ -83,6 +84,7 @@ const Projects: React.FC = () => {
       setLoading(false);
     }
   };
+  const tokenMissing = !localStorage.getItem("adminToken");
 
   return (
     <div className="p-4 space-y-6">
@@ -119,6 +121,10 @@ const Projects: React.FC = () => {
             required
           />
         </div>
+        
+        {tokenMissing && (
+  <p className="text-red-600 text-sm">No token provided. Please log in.</p>
+)}
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
