@@ -12,7 +12,9 @@ const Dashboard = () => {
   const [projects, setProjects] = useState<any[]>([]);
 
   const fetchProjects = async () => {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/projects`);
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}/api/projects`
+    );
     setProjects(res.data);
   };
 
@@ -29,12 +31,16 @@ const Dashboard = () => {
     formData.append("description", description);
     formData.append("image", image);
 
-    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/projects`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/projects`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     setTitle("");
     setDescription("");
@@ -43,9 +49,12 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (id: string) => {
-    await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/projects/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await axios.delete(
+      `${import.meta.env.VITE_API_BASE_URL}/api/projects/${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     fetchProjects();
   };
 
@@ -73,15 +82,24 @@ const Dashboard = () => {
           onChange={(e) => setDescription(e.target.value)}
           className="border p-2 w-full"
         />
-        <input type="file" onChange={(e) => setImage(e.target.files?.[0] || null)} />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">Upload</button>
+        <input
+          type="file"
+          onChange={(e) => setImage(e.target.files?.[0] || null)}
+        />
+        <button className="bg-blue-600 text-white px-4 py-2 rounded">
+          Upload
+        </button>
       </form>
 
       {/* Project List */}
       <div className="grid grid-cols-3 gap-6">
         {projects.map((p) => (
           <div key={p._id} className="border p-2 rounded shadow">
-            <img src={p.imageUrl} alt={p.title} className="w-full h-40 object-cover" />
+            <img
+              src={p.imageUrl}
+              alt={p.title}
+              className="w-full h-40 object-cover"
+            />
             <h2 className="font-semibold mt-2">{p.title}</h2>
             <p className="text-sm">{p.description}</p>
             <button
@@ -93,6 +111,13 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+
+      <button
+        onClick={() => navigate("/admin/add-project")}
+        className="mt-4 px-4 py-2 bg-green-600 text-white rounded"
+      >
+        Add New Project
+      </button>
 
       <button
         onClick={handleLogout}
