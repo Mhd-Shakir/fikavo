@@ -19,16 +19,30 @@ const AddProject = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/projects`,
+        // ✅ Fixed: Use consistent environment variable
+        `${import.meta.env.VITE_API_BASE_URL}/api/projects`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            // Add auth token if needed
+            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          } 
+        }
       );
 
       console.log("✅ Project uploaded:", res.data);
       alert("Project uploaded successfully!");
+      
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setFile(null);
+      
     } catch (err) {
       console.error("❌ Upload error:", err);
-      alert("Upload failed");
+      console.error("Error response:", err.response?.data);
+      alert("Upload failed: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -61,7 +75,7 @@ const AddProject = () => {
       <button
         type="submit"
         disabled={loading}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
       >
         {loading ? "Uploading..." : "Upload Project"}
       </button>
