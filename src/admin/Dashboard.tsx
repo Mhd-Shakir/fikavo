@@ -10,7 +10,9 @@ import {
   Calendar,
   Image as ImageIcon,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  ExternalLink,
+  Link as LinkIcon
 } from 'lucide-react';
 
 interface Project {
@@ -18,6 +20,7 @@ interface Project {
   title: string;
   image: string;
   date: string;
+  link?: string; // Optional project link
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +28,7 @@ interface Project {
 interface ProjectFormData {
   title: string;
   date: string;
+  link: string;
   image: File | null;
 }
 
@@ -36,6 +40,7 @@ const ProjectManager: React.FC = () => {
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     date: new Date().toISOString().split('T')[0],
+    link: '',
     image: null
   });
   const [formLoading, setFormLoading] = useState(false);
@@ -48,7 +53,11 @@ const ProjectManager: React.FC = () => {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/projects`);
       const data = await response.json();
       if (data.success) {
-        setProjects(data.projects);
+        // Sort by updatedAt in descending order (most recent first)
+        const sortedProjects = data.projects.sort((a: Project, b: Project) => 
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+        setProjects(sortedProjects);
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -95,6 +104,17 @@ const ProjectManager: React.FC = () => {
     }
   };
 
+  // Validate URL format
+  const isValidUrl = (string: string) => {
+    if (!string.trim()) return true; // Empty string is valid (optional field)
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +126,11 @@ const ProjectManager: React.FC = () => {
 
     if (!editingProject && !formData.image) {
       showMessage('error', 'Image is required');
+      return;
+    }
+
+    if (formData.link.trim() && !isValidUrl(formData.link.trim())) {
+      showMessage('error', 'Please enter a valid URL (including http:// or https://)');
       return;
     }
 
@@ -121,6 +146,11 @@ const ProjectManager: React.FC = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title.trim());
       formDataToSend.append('date', formData.date);
+      
+      // Only append link if it's not empty
+      if (formData.link.trim()) {
+        formDataToSend.append('link', formData.link.trim());
+      }
       
       if (formData.image) {
         formDataToSend.append('image', formData.image);
@@ -192,6 +222,7 @@ const ProjectManager: React.FC = () => {
     setFormData({
       title: '',
       date: new Date().toISOString().split('T')[0],
+      link: '',
       image: null
     });
     setImagePreview(null);
@@ -205,6 +236,7 @@ const ProjectManager: React.FC = () => {
     setFormData({
       title: project.title,
       date: project.date.split('T')[0],
+      link: project.link || '',
       image: null
     });
     setImagePreview(project.image);
@@ -312,6 +344,26 @@ const ProjectManager: React.FC = () => {
               </div>
             </div>
 
+            {/* Project Link */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Project Link (Optional)
+              </label>
+              <div className="relative">
+                <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  placeholder="https://example.com"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Enter the URL where users can view the live project
+              </p>
+            </div>
+
             {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -397,6 +449,9 @@ const ProjectManager: React.FC = () => {
                     Project
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Link
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -423,6 +478,21 @@ const ProjectManager: React.FC = () => {
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {project.link ? (
+                        <a
+                          href={project.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800 text-sm"
+                        >
+                          <ExternalLink size={14} />
+                          View Project
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No link</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(project.date)}

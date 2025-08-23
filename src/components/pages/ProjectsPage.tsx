@@ -254,10 +254,12 @@
 // };
 
 // export default Project;
+
+
 // Frontend/src/pages/ProjectsPage.tsx
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MoveRight, Sparkles, Search, LayoutGrid, List } from "lucide-react";
+import { MoveRight, Sparkles, Search, ExternalLink } from "lucide-react";
 
 // --- Types ---
 interface Project {
@@ -265,6 +267,7 @@ interface Project {
   title: string;
   image: string;
   date: string;
+  link?: string; // Optional project link
   createdAt: string;
   updatedAt: string;
 }
@@ -303,7 +306,6 @@ const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<"grid" | "list">("grid");
   const [query, setQuery] = useState("");
 
   // Fetch projects from API
@@ -315,7 +317,11 @@ const ProjectsPage: React.FC = () => {
         const data = await response.json();
 
         if (data.success) {
-          setProjects(data.projects);
+          // Sort by updatedAt in descending order (most recent first)
+          const sortedProjects = data.projects.sort((a: Project, b: Project) => 
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+          setProjects(sortedProjects);
         } else {
           setError('Failed to load projects');
         }
@@ -345,6 +351,12 @@ const ProjectsPage: React.FC = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleProjectClick = (project: Project) => {
+    if (project.link) {
+      window.open(project.link, '_blank', 'noopener,noreferrer');
+    }
   };
 
   if (loading) {
@@ -416,8 +428,8 @@ const ProjectsPage: React.FC = () => {
           subtitle="Explore our carefully crafted projects that showcase our expertise and passion for innovation"
         />
 
-        {/* Search and View Controls */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+        {/* Search Controls */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -429,38 +441,12 @@ const ProjectsPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white"
             />
           </div>
-          
-          {/* View Toggle */}
-          <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-300 p-1">
-            <button
-              onClick={() => setView("grid")}
-              className={`p-2 rounded-md transition ${
-                view === "grid" 
-                  ? "bg-purple-100 text-purple-600" 
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-              aria-label="Grid view"
-            >
-              <LayoutGrid size={20} />
-            </button>
-            <button
-              onClick={() => setView("list")}
-              className={`p-2 rounded-md transition ${
-                view === "list" 
-                  ? "bg-purple-100 text-purple-600" 
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-              aria-label="List view"
-            >
-              <List size={20} />
-            </button>
-          </div>
         </div>
 
         {/* Count */}
-        <div className="mb-4 text-sm text-gray-600">
+        <div className="mb-6 text-center text-sm text-gray-600">
           Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? "s" : ""}
-          {query ? ` • "${query}"` : ""}
+          {query ? ` for "${query}"` : ""}
         </div>
 
         {/* No projects message */}
@@ -485,89 +471,67 @@ const ProjectsPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Project Grid/List */}
-            {view === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredProjects.map((project, idx) => (
-                  <motion.div
-                    key={project._id}
-                    className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-80"
-                    whileHover={{ y: -8 }}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05, duration: 0.45 }}
-                  >
-                    <motion.img
-                      src={project.image}
-                      alt={project.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src =
-                          "https://via.placeholder.com/1200x800?text=Project";
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.6 }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10" />
-                    <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="text-white text-2xl font-bold font-poppins mb-1">
-                            {project.title}
-                          </h3>
-                          <p className="text-white/80 text-sm">
-                            {formatDate(project.date)}
-                          </p>
+            {/* Projects List */}
+            <div className="space-y-6">
+              {filteredProjects.map((project, idx) => (
+                <motion.div
+                  key={project._id}
+                  className={`group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition ${
+                    project.link ? 'cursor-pointer' : 'cursor-default'
+                  }`}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05, duration: 0.45 }}
+                  onClick={() => handleProjectClick(project)}
+                >
+                  <div className="flex flex-col sm:flex-row">
+                    <div className="sm:w-2/5 h-52 sm:h-56 relative">
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src =
+                            "https://via.placeholder.com/800x600?text=Project";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent sm:hidden" />
+                    </div>
+                    <div className="flex-1 p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">{project.title}</h3>
+                            {project.link && (
+                              <ExternalLink className="text-gray-400 group-hover:text-purple-600 transition-colors" size={16} />
+                            )}
+                          </div>
+                          <p className="text-gray-500 text-sm mb-4">{formatDate(project.date)}</p>
+                          {project.link && (
+                            <div className="inline-flex items-center gap-1 text-sm text-purple-600 group-hover:text-purple-700 transition-colors">
+                              <span>View Project</span>
+                              <ExternalLink size={14} />
+                            </div>
+                          )}
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors">
-                          <MoveRight className="text-white" size={20} />
+                        <div className={`hidden sm:block rounded-full p-2 transition-colors ${
+                          project.link 
+                            ? 'bg-gray-100 group-hover:bg-purple-100' 
+                            : 'bg-gray-100'
+                        }`}>
+                          <MoveRight className={`transition-colors ${
+                            project.link 
+                              ? 'text-gray-700 group-hover:text-purple-600' 
+                              : 'text-gray-400'
+                          }`} size={18} />
                         </div>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {filteredProjects.map((project, idx) => (
-                  <motion.div
-                    key={project._id}
-                    className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05, duration: 0.45 }}
-                  >
-                    <div className="flex flex-col sm:flex-row">
-                      <div className="sm:w-2/5 h-52 sm:h-56 relative">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="absolute inset-0 w-full h-full object-cover"
-                          loading="lazy"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src =
-                              "https://via.placeholder.com/800x600?text=Project";
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent sm:hidden" />
-                      </div>
-                      <div className="flex-1 p-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{project.title}</h3>
-                            <p className="text-gray-500 text-sm">{formatDate(project.date)}</p>
-                          </div>
-                          <div className="hidden sm:block bg-gray-100 rounded-full p-2 group-hover:bg-purple-100 transition-colors">
-                            <MoveRight className="text-gray-700 group-hover:text-purple-600" size={18} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </>
         )}
       </div>

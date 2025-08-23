@@ -185,6 +185,7 @@
 
 // export default Portfolio;
 // Frontend/src/components/Projects.tsx
+// Frontend/src/components/Projects.tsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, MoveRight } from "lucide-react";
@@ -196,6 +197,7 @@ interface Project {
   title: string;
   image: string;
   date: string;
+  link?: string; // Optional project link
   createdAt: string;
   updatedAt: string;
 }
@@ -244,7 +246,11 @@ const Portfolio: React.FC = () => {
         const data = await response.json();
 
         if (data.success) {
-          setProjects(data.projects);
+          // Sort by updatedAt in descending order (most recent first) and take only 6
+          const sortedProjects = data.projects
+            .sort((a: Project, b: Project) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+            .slice(0, 6);
+          setProjects(sortedProjects);
         } else {
           setError('Failed to load projects');
         }
@@ -339,14 +345,19 @@ const Portfolio: React.FC = () => {
           <>
             {/* Project Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {projects.slice(0, 6).map((project, idx) => (
+              {projects.map((project, idx) => (
                 <motion.div
                   key={project._id}
-                  className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-80 cursor-default"
+                  className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-80 cursor-pointer"
                   whileHover={{ y: -8 }}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1, duration: 0.5 }}
+                  onClick={() => {
+                    if (project.link) {
+                      window.open(project.link, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
                 >
                   <motion.img
                     src={project.image}
@@ -366,11 +377,9 @@ const Portfolio: React.FC = () => {
                       <h3 className="text-white text-2xl font-bold font-poppins">
                         {project.title}
                       </h3>
-                      <Link to='/projects'>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors">
-                          <MoveRight className="text-white" size={20} />
-                        </div>
-                      </Link>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors">
+                        <MoveRight className="text-white" size={20} />
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -383,7 +392,8 @@ const Portfolio: React.FC = () => {
                 to="/projects"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-blue-700 transition-colors"
               >
-                View All Projects ({projects.length})
+                View All Projects
+                <MoveRight size={20} />
               </Link>
             </div>
           </>
