@@ -231,7 +231,7 @@ const ProjectsPage: React.FC = () => {
                     <img
                       src={project.image}
                       alt={project.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="absolute inset-0 w-full h-full object-fit transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src =
