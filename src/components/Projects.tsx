@@ -161,7 +161,7 @@ const Portfolio: React.FC = () => {
               {projects.map((project, idx) => (
                 <motion.div
                   key={project._id}
-                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-52 object-contain cursor-pointer "
+                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 w-full h-52 object-contain cursor-pointer "
                   whileHover={{ y: -8 }}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
