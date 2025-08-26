@@ -156,49 +156,102 @@ const Portfolio: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Project Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {projects.map((project, idx) => (
-                <motion.div
-                  key={project._id}
-                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 w-full h-52 object-contain cursor-pointer "
-                  whileHover={{ y: -8 }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1, duration: 0.5 }}
-                  onClick={() => {
-                    if (project.link) {
-                      window.open(project.link, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                >
-                  <motion.img
-                    src={project.image}
-                    alt={project.title}
-                    className="absolute inset-0 w-full h-full"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.6 }}
-                    draggable={false}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        "https://via.placeholder.com/1200x800?text=Project";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10" />
-                  <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-white text-2xl font-bold font-poppins">
-                        {project.title}
-                      </h3>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors">
-                        <MoveRight className="text-white" size={20} />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            {/* Project Grid - Similar to KITE Media Concept */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {projects.map((project, idx) => (
+    <motion.div
+      key={project._id}
+      className="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+      whileHover={{ y: -8 }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: idx * 0.1, duration: 0.5 }}
+      onClick={() => {
+        if (project.link) {
+          window.open(project.link, '_blank', 'noopener,noreferrer');
+        }
+      }}
+    >
+      {/* Image Container with Aspect Ratio */}
+      <motion.div 
+        className="aspect-[4/3] overflow-hidden" // 4:3 aspect ratio like KITE's cards
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.6 }}
+      >
+        <img
+          src={project.image}
+          alt={project.title}
+          className="w-full h-full object-cover" // This will now work properly with aspect ratio
+          draggable={false}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src =
+              "https://via.placeholder.com/400x300?text=Project";
+          }}
+        />
+      </motion.div>
+      
+      {/* Overlay Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      {/* Content Overlay */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+        <div className="flex justify-between items-center">
+          <h3 className="text-white text-lg font-bold font-poppins">
+            {project.title}
+          </h3>
+          <div className="bg-purple-600 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <MoveRight className="text-white" size={16} />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  ))}
+</div>
 
+{/* Alternative: Masonry-style layout like KITE */}
+<div className="columns-1 md:columns-2 lg:columns-4 gap-6 space-y-6">
+  {projects.map((project, idx) => (
+    <motion.div
+      key={project._id}
+      className="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer break-inside-avoid"
+      whileHover={{ y: -8 }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: idx * 0.1, duration: 0.5 }}
+      onClick={() => {
+        if (project.link) {
+          window.open(project.link, '_blank', 'noopener,noreferrer');
+        }
+      }}
+    >
+      <motion.img
+        src={project.image}
+        alt={project.title}
+        className="w-full h-auto" // Natural height, no cropping
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.6 }}
+        draggable={false}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).src =
+            "https://via.placeholder.com/400x300?text=Project";
+        }}
+      />
+      
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+        <div className="flex justify-between items-center">
+          <h3 className="text-white text-lg font-bold font-poppins">
+            {project.title}
+          </h3>
+          <div className="bg-purple-600 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <MoveRight className="text-white" size={16} />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  ))}
+</div>
             {/* View All Button */}
             <div className="text-center mt-12">
               <Link
