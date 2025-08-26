@@ -8,6 +8,7 @@ import Process from "./Process";
 import Projects from "./Projects";
 import Contact from "./Contact";
 import Stats from "./ui/Stats";
+import BusinessStartupPackage from "./ui/Startup";
 
 const useIsLg = () => {
   const [isLg, setIsLg] = useState<boolean>(false);
@@ -144,6 +145,8 @@ const Hero: React.FC = () => {
                   Digital Excellence Since 2025
                 </span>
               </motion.div>
+
+              <BusinessStartupPackage />
 
               {/* Title */}
               <motion.h1
