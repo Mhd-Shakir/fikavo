@@ -55,27 +55,21 @@ const Portfolio: React.FC = () => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/api/projects`
-        );
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/projects`);
         const data = await response.json();
 
         if (data.success) {
           // Sort by updatedAt in descending order (most recent first) and take only 6
           const sortedProjects = data.projects
-            .sort(
-              (a: Project, b: Project) =>
-                new Date(b.updatedAt).getTime() -
-                new Date(a.updatedAt).getTime()
-            )
+            .sort((a: Project, b: Project) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
             .slice(0, 6);
           setProjects(sortedProjects);
         } else {
-          setError("Failed to load projects");
+          setError('Failed to load projects');
         }
       } catch (err) {
-        console.error("Error fetching projects:", err);
-        setError("Failed to load projects");
+        console.error('Error fetching projects:', err);
+        setError('Failed to load projects');
       } finally {
         setLoading(false);
       }
@@ -103,8 +97,8 @@ const Portfolio: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center">
             <p className="text-red-600">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
+            <button 
+              onClick={() => window.location.reload()} 
               className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
             >
               Try Again
@@ -157,12 +151,8 @@ const Portfolio: React.FC = () => {
         {/* No projects message */}
         {projects.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg mb-4">
-              No projects to display yet.
-            </p>
-            <p className="text-gray-500">
-              Check back soon for our amazing work!
-            </p>
+            <p className="text-gray-600 text-lg mb-4">No projects to display yet.</p>
+            <p className="text-gray-500">Check back soon for our amazing work!</p>
           </div>
         ) : (
           <>
@@ -171,25 +161,21 @@ const Portfolio: React.FC = () => {
               {projects.map((project, idx) => (
                 <motion.div
                   key={project._id}
-                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-52 cursor-pointer"
+                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-52 object-contain cursor-pointer "
                   whileHover={{ y: -8 }}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1, duration: 0.5 }}
                   onClick={() => {
                     if (project.link) {
-                      window.open(
-                        project.link,
-                        "_blank",
-                        "noopener,noreferrer"
-                      );
+                      window.open(project.link, '_blank', 'noopener,noreferrer');
                     }
                   }}
                 >
                   <motion.img
                     src={project.image}
                     alt={project.title}
-                    className="absolute inset-0 w-full h-full object-contain" // Changed from object-cover to object-contain
+                    className="absolute inset-0 w-full h-full"
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.6 }}
                     draggable={false}
@@ -213,56 +199,6 @@ const Portfolio: React.FC = () => {
               ))}
             </div>
 
-            {/* Alternative Solution - Dynamic Height Container */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {projects.map((project, idx) => (
-                <motion.div
-                  key={project._id}
-                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
-                  whileHover={{ y: -8 }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1, duration: 0.5 }}
-                  onClick={() => {
-                    if (project.link) {
-                      window.open(
-                        project.link,
-                        "_blank",
-                        "noopener,noreferrer"
-                      );
-                    }
-                  }}
-                >
-                  <motion.div className="aspect-video">
-                    {" "}
-                    {/* This creates a 16:9 aspect ratio container */}
-                    <motion.img
-                      src={project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover" // Now object-cover works properly with aspect ratio
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.6 }}
-                      draggable={false}
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src =
-                          "https://via.placeholder.com/1200x800?text=Project";
-                      }}
-                    />
-                  </motion.div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10" />
-                  <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-white text-2xl font-bold font-poppins">
-                        {project.title}
-                      </h3>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-full p-2 group-hover:bg-purple-600 transition-colors">
-                        <MoveRight className="text-white" size={20} />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
             {/* View All Button */}
             <div className="text-center mt-12">
               <Link
