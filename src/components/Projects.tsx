@@ -175,7 +175,7 @@ const Portfolio: React.FC = () => {
                   <motion.img
                     src={project.image}
                     alt={project.title}
-                    className="absolute inset-0 w-full h-full object-fill"
+                    className="absolute inset-0 w-full h-full"
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.6 }}
                     draggable={false}
