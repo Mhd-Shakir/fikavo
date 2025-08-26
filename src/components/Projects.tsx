@@ -157,11 +157,11 @@ const Portfolio: React.FC = () => {
         ) : (
           <>
             {/* Project Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {projects.map((project, idx) => (
                 <motion.div
                   key={project._id}
-                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-80 cursor-pointer"
+                  className="group relative overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-52 cursor-pointer"
                   whileHover={{ y: -8 }}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
