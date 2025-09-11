@@ -8,6 +8,7 @@ import Process from "./Process";
 import Projects from "./Projects";
 import Contact from "./Contact";
 import Stats from "./ui/Stats";
+import SurpriseBrandbookButton from "./ui/SurpriseBrandbookButton";
 
 const useIsLg = () => {
   const [isLg, setIsLg] = useState<boolean>(false);
@@ -254,6 +255,7 @@ const Hero: React.FC = () => {
         </motion.div>
       </section>
 
+      <SurpriseBrandbookButton />
       <Stats />
       <Services />
       <Process />

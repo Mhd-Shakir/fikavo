@@ -22,7 +22,7 @@ import AdminApp from "./admin/AdminApp";
 // --- Pages ---
 import AboutPage from "./components/pages/AboutPage";
 import ServicesPage from "./components/pages/ServicesPage";
-import ProcessPage from "./components/pages/ProcessPage";
+import PackagePrice from "./components/ui/PackagePrice";
 import ProjectsPage from "./components/pages/ProjectsPage";
 import ContactPage from "./components/pages/ContactPage";
 import TechStackGuide from "./components/ui/TechStackGuide";
@@ -58,7 +58,7 @@ function AppContent() {
             <Route path="/" element={<Hero />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/services" element={<ServicesPage />} />
-            <Route path="/process" element={<ProcessPage />} />
+            <Route path="/price" element={<PackagePrice />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/faq" element={<FAQ />} />
