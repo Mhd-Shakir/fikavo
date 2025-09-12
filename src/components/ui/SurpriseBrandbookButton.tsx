@@ -1,22 +1,26 @@
-import Button from '../ui/Button';
+import { Download } from 'lucide-react';
 
 const SurpriseBrandbookButton = () => {
-  // Use the direct link as a string
-  const pdfUrl = "https://drive.google.com/file/d/1WZxs7o2vqQrX3PMB4c3QHMeBfBE-CHec/view?usp=sharing";
-
-  const handleClick = () => {
-    window.open(pdfUrl, "_blank");
-  };
+  // Correct path to a file in the `public` folder
+  const pdfUrl = '/assets/fikavo brand guidline.pdf';
 
   return (
     <div className="flex justify-center py-12 bg-gradient-to-b from-transparent to-slate-50/30">
-      <Button
-        onClick={handleClick}
-        variant="arrow"
-        className="bg-brand-violet text-white hover:bg-brand-dark/10 shadow-lg shadow-brand-violet/20 hover:shadow-brand-violet/30 transition-shadow"
+      <a
+        href={pdfUrl}
+        download="Fikavo-Brandbook.pdf"
+        // --- ALL STYLING AND HOVER CLASSES ARE NOW HERE ---
+        className="
+          inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
+          bg-brand-violet text-white
+          shadow-lg shadow-brand-violet/20
+          transition-all duration-300
+          hover:bg-brand-dark/80 hover:shadow-brand-violet/30 hover:-translate-y-1
+        "
       >
-        Fikavo Brandbook
-      </Button>
+        <Download size={20} />
+        <span>Fikavo Brandbook</span>
+      </a>
     </div>
   );
 };

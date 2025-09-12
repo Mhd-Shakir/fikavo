@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import FikavoLogo from "../assets/fikavo logo final/fikavo_logo.png";
-import Button from "./ui/Button";
-import { Menu, X } from "lucide-react";
+import { Menu, Instagram, Facebook, X, Linkedin, MapPin, Phone, Mail, AlignRight } from "lucide-react";
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isVarietyPanelOpen, setIsVarietyPanelOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,7 +25,14 @@ const Navbar: React.FC = () => {
     { label: "Contact", path: "/contact" },
   ];
 
-  // Animation variants for the diagonal slide effect
+  const socialLinks = [
+    { icon: Instagram, label: "Instagram", url: "https://www.instagram.com/fikavocollective/", color: "hover:text-pink-500" },
+    { icon: Facebook, label: "Facebook", url: "https://facebook.com/fikavo", color: "hover:text-blue-600" },
+    { icon: X, label: "X", url: "https://x.com/fikavocollectiv", color: "hover:text-blue-400" },
+    { icon: Linkedin, label: "LinkedIn", url: "https://www.linkedin.com/in/fikavocollective/", color: "hover:text-blue-700" },
+  ];
+
+  // Animation variants for mobile menu diagonal slide effect
   const menuVariants = {
     closed: {
       clipPath: "polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)",
@@ -48,12 +55,40 @@ const Navbar: React.FC = () => {
       }
     },
     exit: {
-      clipPath: "polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%)",
+      clipPath: "polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)",
       opacity: 0,
-      scale: 0.9,
-      transformOrigin: "top right",
+      scale: 0.8,
+      transformOrigin: "bottom left",
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 1, 0.5, 1],
+        clipPath: {
+          duration: 0.8,
+          ease: [0.25, 1, 0.5, 1]
+        }
+      }
+    }
+  };
+
+  // Animation variants for variety panel (right slide)
+  const varietyPanelVariants = {
+    closed: {
+      x: "100%",
+      opacity: 0,
+    },
+    open: {
+      x: 0,
+      opacity: 1,
       transition: {
         duration: 0.5,
+        ease: [0.25, 1, 0.5, 1],
+      }
+    },
+    exit: {
+      x: "100%",
+      opacity: 0,
+      transition: {
+        duration: 0.4,
         ease: [0.25, 1, 0.5, 1]
       }
     }
@@ -74,6 +109,36 @@ const Navbar: React.FC = () => {
       scale: 1,
       transition: {
         delay: 0.3 + index * 0.1,
+        duration: 0.4,
+        ease: [0.25, 1, 0.5, 1]
+      }
+    }),
+    exit: (index: number) => ({
+      x: -30,
+      y: 20,
+      opacity: 0,
+      scale: 0.9,
+      transition: {
+        delay: (navLinks.length - index) * 0.05,
+        duration: 0.3,
+        ease: [0.25, 1, 0.5, 1]
+      }
+    })
+  };
+
+  // Stagger animation for variety panel items
+  const varietyItemVariants = {
+    closed: {
+      x: 30,
+      opacity: 0,
+      scale: 0.9
+    },
+    open: (index: number) => ({
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        delay: 0.2 + index * 0.1,
         duration: 0.4,
         ease: [0.25, 1, 0.5, 1]
       }
@@ -106,7 +171,7 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-8 ">
+            <div className="ml-10 flex items-center space-x-8">
               {navLinks.map((link, index) => (
                 <motion.div
                   key={link.path}
@@ -134,55 +199,74 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* CTA Button */}
-          <motion.div
-            className="hidden md:block"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Link to="/contact">
-              <Button
-                variant="primary"
-                className="shadow-lg shadow-brand-violet/20 hover:shadow-brand-violet/30 transition-shadow"
+          {/* Right Side Icons */}
+          <div className="flex items-center space-x-3">
+            {/* Variety Toggle Button (Desktop & Mobile) */}
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <button
+                onClick={() => setIsVarietyPanelOpen(!isVarietyPanelOpen)}
+                className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10 transition-colors"
+                aria-label="Toggle variety panel"
               >
-                Get a Quote
-              </Button>
-            </Link>
-          </motion.div>
+                <AnimatePresence mode="wait">
+                  {isVarietyPanelOpen ? (
+                    <motion.div
+                      key="close-variety"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <X size={24} className="text-brand-violet" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="grid"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <AlignRight size={24} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            </motion.div>
 
-          {/* Mobile menu button */}
-          <motion.div className="md:hidden" whileTap={{ scale: 0.9 }}>
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10 relative z-50"
-              aria-label="Toggle menu"
-            >
-              <AnimatePresence mode="wait">
-                {isMobileMenuOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <X size={24} className="text-brand-violet" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Menu size={24} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
-          </motion.div>
+            {/* Mobile menu button */}
+            <motion.div className="md:hidden" whileTap={{ scale: 0.9 }}>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10"
+                aria-label="Toggle menu"
+              >
+                <AnimatePresence mode="wait">
+                  {isMobileMenuOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <X size={24} className="text-brand-violet" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Menu size={24} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            </motion.div>
+          </div>
         </div>
       </div>
 
@@ -208,6 +292,7 @@ const Navbar: React.FC = () => {
                   variants={menuItemVariants}
                   initial="closed"
                   animate="open"
+                  exit="exit"
                   className="overflow-hidden"
                 >
                   <Link
@@ -223,25 +308,148 @@ const Navbar: React.FC = () => {
                   </Link>
                 </motion.div>
               ))}
-              
-              <motion.div 
-                className="pt-4 px-6"
-                custom={navLinks.length}
-                variants={menuItemVariants}
-                initial="closed"
-                animate="open"
-              >
-                <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    variant="primary"
-                    className="w-full shadow-lg shadow-brand-violet/20 hover:shadow-brand-violet/40 transform hover:scale-105 transition-all duration-300"
-                  >
-                    Get a Quote
-                  </Button>
-                </Link>
-              </motion.div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Variety Panel - Social Media & Location */}
+      <AnimatePresence>
+        {isVarietyPanelOpen && (
+          <motion.div
+            className="fixed top-0 right-0 h-full w-80 bg-gradient-to-b from-white via-white to-brand-violet/5 backdrop-blur-xl shadow-2xl border-l border-gray-100 z-40"
+            variants={varietyPanelVariants}
+            initial="closed"
+            animate="open"
+            exit="exit"
+          >
+            <div className="h-full overflow-y-auto">
+              {/* Header */}
+              <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 p-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-brand-dark font-poppins">Connect With Us</h3>
+                  <button
+                    onClick={() => setIsVarietyPanelOpen(false)}
+                    className="text-gray-400 hover:text-brand-violet transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-8">
+                {/* Social Media Section */}
+                <motion.div
+                  custom={0}
+                  variants={varietyItemVariants}
+                  initial="closed"
+                  animate="open"
+                >
+                  <h4 className="text-lg font-semibold text-brand-dark mb-4 font-poppins">Follow Us</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {socialLinks.map((social, index) => (
+                      <motion.a
+                        key={social.label}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:from-brand-violet/5 hover:to-brand-violet/10 transition-all duration-300 group ${social.color}`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        custom={index}
+                        variants={varietyItemVariants}
+                      >
+                        <social.icon size={28} className="mb-2 transition-colors duration-300" />
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                          {social.label}
+                        </span>
+                      </motion.a>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Location & Contact Section */}
+                <motion.div
+                  custom={1}
+                  variants={varietyItemVariants}
+                  initial="closed"
+                  animate="open"
+                >
+                  <h4 className="text-lg font-semibold text-brand-dark mb-4 font-poppins">Visit Us</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
+                      <MapPin size={20} className="text-brand-violet mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-gray-900">Our Office</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Calicut,Kerala
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
+                      <Phone size={20} className="text-brand-violet flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-gray-900">Call Us</p>
+                        <a href="tel:+919745614587" className="text-sm text-gray-600">+91 97456 14587</a>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
+                      <Mail size={20} className="text-brand-violet flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-gray-900">Email Us</p>
+                        <a href="mailto:" className="text-sm text-gray-600"></a>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Business Hours */}
+                <motion.div
+                  custom={2}
+                  variants={varietyItemVariants}
+                  initial="closed"
+                  animate="open"
+                >
+                  <h4 className="text-lg font-semibold text-brand-dark mb-4 font-poppins">Business Hours</h4>
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Monday - Friday</span>
+                        <span className="font-medium text-gray-900">9:00 AM - 6:00 PM</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Saturday</span>
+                        <span className="font-medium text-gray-900">10:00 AM - 4:00 PM</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Sunday</span>
+                        <span className="font-medium text-gray-900">Closed</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Decorative Elements */}
+            <div className="absolute top-20 right-4 w-16 h-16 bg-gradient-to-br from-brand-violet/10 to-transparent rounded-full opacity-50" />
+            <div className="absolute bottom-20 right-8 w-12 h-12 bg-gradient-to-tl from-brand-violet/5 to-transparent rounded-full opacity-30" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlay for variety panel */}
+      <AnimatePresence>
+        {isVarietyPanelOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsVarietyPanelOpen(false)}
+          />
         )}
       </AnimatePresence>
     </motion.nav>
