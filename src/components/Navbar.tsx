@@ -25,6 +25,61 @@ const Navbar: React.FC = () => {
     { label: "Contact", path: "/contact" },
   ];
 
+  // Animation variants for the diagonal slide effect
+  const menuVariants = {
+    closed: {
+      clipPath: "polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)",
+      opacity: 0,
+      scale: 0.8,
+      transformOrigin: "bottom left"
+    },
+    open: {
+      clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+      opacity: 1,
+      scale: 1,
+      transformOrigin: "bottom left",
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 1, 0.5, 1],
+        clipPath: {
+          duration: 0.8,
+          ease: [0.25, 1, 0.5, 1]
+        }
+      }
+    },
+    exit: {
+      clipPath: "polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%)",
+      opacity: 0,
+      scale: 0.9,
+      transformOrigin: "top right",
+      transition: {
+        duration: 0.5,
+        ease: [0.25, 1, 0.5, 1]
+      }
+    }
+  };
+
+  // Stagger animation for menu items
+  const menuItemVariants = {
+    closed: {
+      x: -30,
+      y: 20,
+      opacity: 0,
+      scale: 0.9
+    },
+    open: (index: number) => ({
+      x: 0,
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        delay: 0.3 + index * 0.1,
+        duration: 0.4,
+        ease: [0.25, 1, 0.5, 1]
+      }
+    })
+  };
+
   return (
     <motion.nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
@@ -100,66 +155,91 @@ const Navbar: React.FC = () => {
           <motion.div className="md:hidden" whileTap={{ scale: 0.9 }}>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10"
+              className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10 relative z-50"
               aria-label="Toggle menu"
             >
-              {isMobileMenuOpen ? (
-                <X size={24} className="text-brand-violet" />
-              ) : (
-                <Menu size={24} />
-              )}
+              <AnimatePresence mode="wait">
+                {isMobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X size={24} className="text-brand-violet" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu size={24} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
           </motion.div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu with Diagonal Slide Animation */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            className="md:hidden bg-white border-t border-gray-100"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{
-              opacity: 1,
-              height: "auto",
-              transition: { duration: 0.3, ease: [0.25, 1, 0.5, 1] },
-            }}
-            exit={{
-              opacity: 0,
-              height: 0,
-              transition: { duration: 0.2, ease: [0.25, 1, 0.5, 1] },
-            }}
+            className="md:hidden absolute top-full left-0 w-full bg-gradient-to-br from-white via-white to-brand-violet/5 backdrop-blur-xl border-t border-gray-100 shadow-2xl overflow-hidden"
+            variants={menuVariants}
+            initial="closed"
+            animate="open"
+            exit="exit"
           >
-            <div className="px-2 pt-2 pb-5 space-y-1">
-              {navLinks.map((link) => (
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-brand-violet/10 to-transparent rounded-bl-full" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-brand-violet/5 to-transparent rounded-tr-full" />
+            
+            <div className="relative px-4 pt-6 pb-8 space-y-2">
+              {navLinks.map((link, index) => (
                 <motion.div
                   key={link.path}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{
-                    x: 0,
-                    opacity: 1,
-                    transition: { duration: 0.3 },
-                  }}
+                  custom={index}
+                  variants={menuItemVariants}
+                  initial="closed"
+                  animate="open"
+                  className="overflow-hidden"
                 >
                   <Link
                     to={link.path}
-                    className="block px-4 py-3 text-brand-dark hover:bg-brand-violet/5 rounded-lg transition-colors font-poppins"
+                    className="block px-6 py-4 text-brand-dark hover:bg-brand-violet/10 hover:text-brand-violet rounded-xl transition-all duration-300 font-poppins font-medium text-lg group relative"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {link.label}
+                    <span className="relative z-10">{link.label}</span>
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-r from-brand-violet/5 to-brand-violet/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      whileHover={{ scale: 1.02 }}
+                    />
                   </Link>
                 </motion.div>
               ))}
-              <div className="px-4 py-3">
-                <Link to="/contact">
+              
+              <motion.div 
+                className="pt-4 px-6"
+                custom={navLinks.length}
+                variants={menuItemVariants}
+                initial="closed"
+                animate="open"
+              >
+                <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     variant="primary"
-                    className="shadow-lg shadow-brand-violet/20"
+                    className="w-full shadow-lg shadow-brand-violet/20 hover:shadow-brand-violet/40 transform hover:scale-105 transition-all duration-300"
                   >
                     Get a Quote
                   </Button>
                 </Link>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         )}
