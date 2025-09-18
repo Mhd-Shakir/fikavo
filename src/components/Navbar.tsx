@@ -12,10 +12,17 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
+      // Close mobile menu and variety panel when the user scrolls
+      if (isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+      if (isVarietyPanelOpen) {
+        setIsVarietyPanelOpen(false);
+      }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isMobileMenuOpen, isVarietyPanelOpen]);
 
   const navLinks = [
     { label: "About", path: "/about" },
@@ -190,8 +197,8 @@ const Navbar: React.FC = () => {
                     {link.label}
                     <span
                       className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 w-full bg-brand-violet
-               origin-right scale-x-0 group-hover:origin-left group-hover:scale-x-100
-               transition-transform duration-300 ease-out"
+                  origin-right scale-x-0 group-hover:origin-left group-hover:scale-x-100
+                  transition-transform duration-300 ease-out"
                     />
                   </Link>
                 </motion.div>
@@ -201,38 +208,50 @@ const Navbar: React.FC = () => {
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-3">
-            {/* Variety Toggle Button (Desktop & Mobile) */}
-            <motion.div whileTap={{ scale: 0.9 }}>
-              <button
-                onClick={() => setIsVarietyPanelOpen(!isVarietyPanelOpen)}
-                className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10 transition-colors"
-                aria-label="Toggle variety panel"
-              >
-                <AnimatePresence mode="wait">
-                  {isVarietyPanelOpen ? (
-                    <motion.div
-                      key="close-variety"
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <X size={24} className="text-brand-violet" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="grid"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <AlignRight size={24} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
-            </motion.div>
+            {/* Conditional Rendering for CTA / Variety Button */}
+            {isScrolled ? (
+              // CTA Button (displayed when not scrolled)
+              <motion.div className="hidden md:block" whileTap={{ scale: 0.9 }}>
+                <Link to="/contact">
+                  <button className="bg-brand-violet text-white px-4 py-2 rounded-2xl font-poppins font-medium transition-transform duration-300 transform hover:scale-105 hover:shadow-lg">
+                    Get Started
+                  </button>
+                </Link>
+              </motion.div>
+            ) : (
+              // Variety Toggle Button (displayed when scrolled)
+              <motion.div className="hidden md:block" whileTap={{ scale: 0.9 }}>
+                <button
+                  onClick={() => setIsVarietyPanelOpen(!isVarietyPanelOpen)}
+                  className="text-brand-dark hover:text-brand-violet p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-white/10 transition-colors"
+                  aria-label="Toggle variety panel"
+                >
+                  <AnimatePresence mode="wait">
+                    {isVarietyPanelOpen ? (
+                      <motion.div
+                        key="close-variety"
+                        initial={{ rotate: -90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: 90, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <X size={24} className="text-brand-violet" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="grid"
+                        initial={{ rotate: 90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: -90, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <AlignRight size={24} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </motion.div>
+            )}
 
             {/* Mobile menu button */}
             <motion.div className="md:hidden" whileTap={{ scale: 0.9 }}>
@@ -389,9 +408,10 @@ const Navbar: React.FC = () => {
 
                     <div className="flex items-center space-x-3 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
                       <Phone size={20} className="text-brand-violet flex-shrink-0" />
-                      <div>
+                      <div className="flex flex-col">
                         <p className="font-medium text-gray-900">Call Us</p>
                         <a href="tel:+919745614587" className="text-sm text-gray-600">+91 97456 14587</a>
+                        <a href="tel:+918157000282" className="text-sm text-gray-600">+91 81570 00282</a>
                       </div>
                     </div>
 
@@ -399,37 +419,13 @@ const Navbar: React.FC = () => {
                       <Mail size={20} className="text-brand-violet flex-shrink-0" />
                       <div>
                         <p className="font-medium text-gray-900">Email Us</p>
-                        <a href="mailto:" className="text-sm text-gray-600"></a>
+                        <a href="mailto:fikavocollective@gmial.com" className="text-sm text-gray-600">fikavocollective@gmial.com</a>
                       </div>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Business Hours */}
-                <motion.div
-                  custom={2}
-                  variants={varietyItemVariants}
-                  initial="closed"
-                  animate="open"
-                >
-                  <h4 className="text-lg font-semibold text-brand-dark mb-4 font-poppins">Business Hours</h4>
-                  <div className="p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Monday - Friday</span>
-                        <span className="font-medium text-gray-900">9:00 AM - 6:00 PM</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Saturday</span>
-                        <span className="font-medium text-gray-900">10:00 AM - 4:00 PM</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Sunday</span>
-                        <span className="font-medium text-gray-900">Closed</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+                
               </div>
             </div>
 

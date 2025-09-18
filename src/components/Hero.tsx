@@ -228,6 +228,7 @@ const Hero: React.FC = () => {
               </motion.div>
             </motion.div>
 
+            
             {/* Right Column */}
             <motion.div
               className="relative mt-2 lg:mt-0"

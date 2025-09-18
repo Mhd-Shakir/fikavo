@@ -15,6 +15,7 @@ import ScrollToTopButton from "./components/ui/ScrollToTopButton";
 import PreLoader from "./components/ui/PreLoader";
 import ScrollToTop from "./components/ui/ScrollToTop";
 import FAQ from "./components/ui/FAQ";
+import AttachedButton from "./components/ui/AttachedButton";
 
 // --- Admin Panel ---
 import AdminApp from "./admin/AdminApp";
@@ -46,6 +47,13 @@ function AppContent() {
       {!isLoading && (
         <>
           <ScrollToTop />
+          <AttachedButton socialLinks={{
+            facebook: "https://www.facebook.com/fikavocollective",
+            twitter: "https://twitter.com/fikavocollective",
+            instagram: "https://www.instagram.com/fikavocollective/",
+            youtube: "https://www.youtube.com/@fikavocollective",
+            linkedin: "https://www.linkedin.com/company/fikavocollective/",
+          }} />
 
           {/* Only show site Navbar on non-admin routes */}
           {!isAdminRoute && <Navbar />}
