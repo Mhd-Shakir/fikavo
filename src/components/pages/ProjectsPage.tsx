@@ -57,47 +57,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
   const cardRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(cardRef, { once: true, margin: "0px 0px -100px 0px" });
   
-  // Different animation variants for variety
+  // Only 2 animation variants: left to right and right to left
   const animationVariants = [
     {
       // Slide from left
-      initial: { opacity: 0, x: -60, rotateY: -15 },
-      animate: { opacity: 1, x: 0, rotateY: 0 },
-      whileHover: { y: -8, rotateX: 5, scale: 1.02 }
+      initial: { opacity: 0, x: -60 },
+      animate: { opacity: 1, x: 0 },
+      whileHover: { y: -8, scale: 1.02 }
     },
     {
       // Slide from right
-      initial: { opacity: 0, x: 60, rotateY: 15 },
-      animate: { opacity: 1, x: 0, rotateY: 0 },
-      whileHover: { y: -8, rotateX: -5, scale: 1.02 }
-    },
-    {
-      // Scale and fade
-      initial: { opacity: 0, scale: 0.8, rotateZ: -5 },
-      animate: { opacity: 1, scale: 1, rotateZ: 0 },
-      whileHover: { y: -10, rotateZ: 2, scale: 1.03 }
-    },
-    {
-      // Slide from bottom with tilt
-      initial: { opacity: 0, y: 60, rotateX: 15 },
-      animate: { opacity: 1, y: 0, rotateX: 0 },
-      whileHover: { y: -6, rotateY: 8, scale: 1.02 }
-    },
-    {
-      // Flip animation
-      initial: { opacity: 0, rotateY: 90, scale: 0.8 },
-      animate: { opacity: 1, rotateY: 0, scale: 1 },
-      whileHover: { y: -8, rotateY: -8, scale: 1.02 }
-    },
-    {
-      // Bounce in with rotation
-      initial: { opacity: 0, y: -40, rotateZ: 10, scale: 0.9 },
-      animate: { opacity: 1, y: 0, rotateZ: 0, scale: 1 },
-      whileHover: { y: -8, rotateZ: -5, scale: 1.03 }
+      initial: { opacity: 0, x: 60 },
+      animate: { opacity: 1, x: 0 },
+      whileHover: { y: -8, scale: 1.02 }
     }
   ];
   
-  const variant = animationVariants[index % animationVariants.length];
+  const variant = animationVariants[index % 2];
   
   return (
     <motion.div

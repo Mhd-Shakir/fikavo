@@ -112,44 +112,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
     offset: ["start end", "end start"]
   });
 
-  // Different animation variants based on index
-  const getAnimationVariant = (index: number) => {
-    const variants = [
+  // Only 2 animation variants: left to right and right to left
+  const animationVariants = [
+    {
       // Slide from left
-      {
-        initial: { x: -100, opacity: 0, rotate: -5 },
-        animate: { x: 0, opacity: 1, rotate: 0 }
-      },
+      initial: { x: -100, opacity: 0 },
+      animate: { x: 0, opacity: 1 }
+    },
+    {
       // Slide from right  
-      {
-        initial: { x: 100, opacity: 0, rotate: 5 },
-        animate: { x: 0, opacity: 1, rotate: 0 }
-      },
-      // Scale up
-      {
-        initial: { scale: 0.8, opacity: 0, y: 50 },
-        animate: { scale: 1, opacity: 1, y: 0 }
-      },
-      // Flip in
-      {
-        initial: { rotateY: -90, opacity: 0 },
-        animate: { rotateY: 0, opacity: 1 }
-      },
-      // Bounce from bottom
-      {
-        initial: { y: 100, opacity: 0, scale: 0.5 },
-        animate: { y: 0, opacity: 1, scale: 1 }
-      },
-      // Spiral in
-      {
-        initial: { scale: 0, rotate: 180, opacity: 0 },
-        animate: { scale: 1, rotate: 0, opacity: 1 }
-      }
-    ];
-    return variants[index % variants.length];
-  };
+      initial: { x: 100, opacity: 0 },
+      animate: { x: 0, opacity: 1 }
+    }
+  ];
 
-  const animationVariant = getAnimationVariant(index);
+  const animationVariant = animationVariants[index % 2];
 
   // Parallax effect based on scroll
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
@@ -163,7 +140,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
       initial={animationVariant.initial}
       animate={isInView ? animationVariant.animate : animationVariant.initial}
       transition={{ 
-        delay: index * 0.15, 
+        delay: (index % 2) * 0.1, 
         duration: 0.8,
         type: "spring",
         stiffness: 100,
@@ -171,8 +148,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
       }}
       whileHover={{ 
         y: -12,
-        rotateX: 2,
-        rotateY: 2,
         scale: 1.02
       }}
       onHoverStart={() => setIsHovered(true)}
@@ -241,7 +216,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
           className="flex justify-between items-center"
           initial={{ y: 20, opacity: 0 }}
           animate={isInView ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
-          transition={{ delay: index * 0.15 + 0.5, duration: 0.6 }}
+          transition={{ delay: (index % 2) * 0.1 + 0.5, duration: 0.6 }}
         >
           <motion.h3 
             className="text-white text-lg md:text-xl font-bold font-poppins"
@@ -255,7 +230,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
             className="flex gap-2"
             initial={{ scale: 0 }}
             animate={isInView ? { scale: 1 } : { scale: 0 }}
-            transition={{ delay: index * 0.15 + 0.7, duration: 0.4 }}
+            transition={{ delay: (index % 2) * 0.1 + 0.7, duration: 0.4 }}
           >
             {project.link && (
               <motion.div
@@ -282,7 +257,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
           className="mt-3 h-1 bg-white/20 rounded-full overflow-hidden"
           initial={{ scaleX: 0 }}
           animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
-          transition={{ delay: index * 0.15 + 0.9, duration: 0.8 }}
+          transition={{ delay: (index % 2) * 0.1 + 0.9, duration: 0.8 }}
         >
           <motion.div
             className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
@@ -298,7 +273,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
         className="absolute top-4 right-4 z-20"
         initial={{ scale: 0, rotate: -90 }}
         animate={isInView ? { scale: 1, rotate: 0 } : { scale: 0, rotate: -90 }}
-        transition={{ delay: index * 0.15 + 0.6, duration: 0.5 }}
+        transition={{ delay: (index % 2) * 0.1 + 0.6, duration: 0.5 }}
       >
         <div className="bg-white/10 backdrop-blur-sm rounded-full p-2">
           {index % 3 === 0 ? (
@@ -476,7 +451,7 @@ const Portfolio: React.FC = () => {
               className="text-center mt-16"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: projects.length * 0.15 + 0.5, duration: 0.6 }}
+              transition={{ delay: (projects.length % 2) * 0.1 + 0.5, duration: 0.6 }}
             >
               <Link
                 to="/projects"
