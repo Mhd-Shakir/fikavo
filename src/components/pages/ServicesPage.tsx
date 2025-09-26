@@ -864,7 +864,7 @@ const ServicePage: React.FC = () => {
                 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Start Your Project Today
+                Start Project Now
               </motion.button>
             </div>
           </div>

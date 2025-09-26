@@ -65,8 +65,6 @@ const SocialMediaSidebar: React.FC<SocialMediaSidebarProps> = ({
       window.addEventListener('wheel', handleWheel, { passive: true });
       document.addEventListener('touchmove', handleTouchMove, { passive: true });
       
-      // Prevent body scroll when menu is open (optional - you can remove this if you want scrolling to close instead)
-      // document.body.style.overflow = 'hidden';
     }
 
     return () => {
@@ -154,7 +152,8 @@ const SocialMediaSidebar: React.FC<SocialMediaSidebarProps> = ({
         {/* Enhanced Mobile backdrop */}
         {isOpen && (
           <div 
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[9998]"
+            // The `backdrop-blur-sm` class was removed from here
+            className="fixed inset-0 bg-black/30 z-[9998]"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
             style={{ 
@@ -198,12 +197,12 @@ const SocialMediaSidebar: React.FC<SocialMediaSidebarProps> = ({
         
         .social-main-button:hover {
           transform: scale(1.05) !important;
-          box-shadow: 4px 8px 30px rgba(0, 0, 0, 0.25) !important;
+          box-shadow: 4px 8px 30px rgba(0, 0, 0, 0.25) !importnant;
           background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%) !important;
         }
         
         .social-main-button:active {
-          transform: scale(0.98) !important;
+          /* REMOVED: The transform: scale(0.98) was removed from here */
         }
         
         .social-icons-panel {

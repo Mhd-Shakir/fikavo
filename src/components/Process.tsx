@@ -626,7 +626,7 @@ const Process: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
-                  Schedule Free Consultation
+                  Take Consultation
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{
