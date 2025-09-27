@@ -418,7 +418,7 @@ const Portfolio: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <SectionHeader
-          title="Our Creative Projects"
+          title="Our Creative Recent Projects"
           subtitle="Explore our carefully crafted projects that showcase our expertise and passion for innovation"
         />
 
