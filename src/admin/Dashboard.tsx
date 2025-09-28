@@ -12,7 +12,12 @@ import {
   AlertCircle,
   CheckCircle,
   ExternalLink,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Tag,
+  Globe,
+  Video,
+  Palette,
+  Award
 } from 'lucide-react';
 
 interface Project {
@@ -20,7 +25,8 @@ interface Project {
   title: string;
   image: string;
   date: string;
-  link?: string; // Optional project link
+  link?: string;
+  category: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,8 +35,41 @@ interface ProjectFormData {
   title: string;
   date: string;
   link: string;
+  category: string;
   image: File | null;
 }
+
+// Category options with icons
+const CATEGORIES = [
+  { 
+    value: 'websites', 
+    label: 'Websites', 
+    icon: Globe,
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-50'
+  },
+  { 
+    value: 'video-editing', 
+    label: 'Video Editing', 
+    icon: Video,
+    color: 'text-red-600',
+    bgColor: 'bg-red-50'
+  },
+  { 
+    value: 'graphic-design', 
+    label: 'Graphic Design', 
+    icon: Palette,
+    color: 'text-violet-600',
+    bgColor: 'bg-violet-50'
+  },
+  { 
+    value: 'branding', 
+    label: 'Branding', 
+    icon: Award,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50'
+  }
+];
 
 const ProjectManager: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -41,6 +80,7 @@ const ProjectManager: React.FC = () => {
     title: '',
     date: new Date().toISOString().split('T')[0],
     link: '',
+    category: 'websites', // Default category
     image: null
   });
   const [formLoading, setFormLoading] = useState(false);
@@ -75,6 +115,11 @@ const ProjectManager: React.FC = () => {
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
+  };
+
+  // Get category info
+  const getCategoryInfo = (categoryValue: string) => {
+    return CATEGORIES.find(cat => cat.value === categoryValue) || CATEGORIES[0];
   };
 
   // Handle image file selection
@@ -146,6 +191,7 @@ const ProjectManager: React.FC = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title.trim());
       formDataToSend.append('date', formData.date);
+      formDataToSend.append('category', formData.category);
       
       // Only append link if it's not empty
       if (formData.link.trim()) {
@@ -223,6 +269,7 @@ const ProjectManager: React.FC = () => {
       title: '',
       date: new Date().toISOString().split('T')[0],
       link: '',
+      category: 'websites',
       image: null
     });
     setImagePreview(null);
@@ -237,6 +284,7 @@ const ProjectManager: React.FC = () => {
       title: project.title,
       date: project.date.split('T')[0],
       link: project.link || '',
+      category: project.category || 'websites',
       image: null
     });
     setImagePreview(project.image);
@@ -326,6 +374,43 @@ const ProjectManager: React.FC = () => {
                 placeholder="Enter project title"
                 required
               />
+            </div>
+
+            {/* Category Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Project Category *
+              </label>
+              <div className="relative">
+                <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none appearance-none bg-white"
+                  required
+                >
+                  {CATEGORIES.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Category Preview */}
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-gray-500">Selected:</span>
+                {(() => {
+                  const categoryInfo = getCategoryInfo(formData.category);
+                  const IconComponent = categoryInfo.icon;
+                  return (
+                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${categoryInfo.bgColor} ${categoryInfo.color}`}>
+                      <IconComponent size={14} />
+                      {categoryInfo.label}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
 
             {/* Date */}
@@ -449,6 +534,9 @@ const ProjectManager: React.FC = () => {
                     Project
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Link
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -463,61 +551,72 @@ const ProjectManager: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {projects.map((project) => (
-                  <tr key={project._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="h-12 w-12 rounded-lg object-cover"
-                        />
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {project.title}
+                {projects.map((project) => {
+                  const categoryInfo = getCategoryInfo(project.category);
+                  const CategoryIcon = categoryInfo.icon;
+                  
+                  return (
+                    <tr key={project._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="h-12 w-12 rounded-lg object-cover"
+                          />
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {project.title}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {project.link ? (
-                        <a
-                          href={project.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800 text-sm"
-                        >
-                          <ExternalLink size={14} />
-                          View Project
-                        </a>
-                      ) : (
-                        <span className="text-gray-400 text-sm">No link</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(project.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(project.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => startEdit(project)}
-                          className="text-purple-600 hover:text-purple-900 p-2 hover:bg-purple-50 rounded-lg transition"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(project._id)}
-                          className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${categoryInfo.bgColor} ${categoryInfo.color}`}>
+                          <CategoryIcon size={14} />
+                          {categoryInfo.label}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {project.link ? (
+                          <a
+                            href={project.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800 text-sm"
+                          >
+                            <ExternalLink size={14} />
+                            View Project
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No link</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(project.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(project.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => startEdit(project)}
+                            className="text-purple-600 hover:text-purple-900 p-2 hover:bg-purple-50 rounded-lg transition"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(project._id)}
+                            className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
