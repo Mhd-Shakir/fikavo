@@ -678,14 +678,6 @@ const ProjectsPage: React.FC = () => {
                 <p className="text-gray-600 text-lg mb-4">
                   No {CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase()} projects yet.
                 </p>
-                <motion.button 
-                  onClick={() => setSelectedCategory('all')}
-                  className="text-purple-600 hover:text-purple-700 font-medium"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  View all projects
-                </motion.button>
               </>
             ) : (
               <>
