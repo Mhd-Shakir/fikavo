@@ -1,7 +1,7 @@
 // Frontend/src/pages/ProjectsPage.tsx
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { MoveRight, Sparkles, Search, ExternalLink } from "lucide-react";
+import { MoveRight, Sparkles, Search, ExternalLink, Globe, Video, Palette, Award } from "lucide-react";
 
 // --- Types ---
 interface Project {
@@ -10,9 +10,19 @@ interface Project {
   image: string;
   date: string;
   link?: string;
+  category: string; // Added category field
   createdAt: string;
   updatedAt: string;
 }
+
+// Category configuration
+const CATEGORIES = [
+  { id: 'all', label: 'All Projects', icon: Sparkles },
+  { id: 'websites', label: 'Websites', icon: Globe },
+  { id: 'video-editing', label: 'Video Editing', icon: Video },
+  { id: 'graphic-design', label: 'Graphic Design', icon: Palette },
+  { id: 'branding', label: 'Branding', icon: Award }
+];
 
 // --- SectionHeader with animation & gradient text ---
 interface SectionHeaderProps {
@@ -45,6 +55,93 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle }) => (
   </motion.div>
 );
 
+// Category Filter Buttons Component
+interface CategoryFiltersProps {
+  selectedCategory: string;
+  onCategoryChange: (category: string) => void;
+  projectCounts: Record<string, number>;
+}
+
+const CategoryFilters: React.FC<CategoryFiltersProps> = ({ 
+  selectedCategory, 
+  onCategoryChange, 
+  projectCounts 
+}) => (
+  <motion.div 
+    className="mb-8 flex flex-wrap gap-3 justify-center"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.2 }}
+  >
+    {CATEGORIES.map((category, index) => {
+      const IconComponent = category.icon;
+      const count = projectCounts[category.id] || 0;
+      const isActive = selectedCategory === category.id;
+      
+      return (
+        <motion.button
+          key={category.id}
+          onClick={() => onCategoryChange(category.id)}
+          className={`
+            relative px-6 py-3 font-medium text-sm transition-all duration-300
+            flex items-center gap-2 group overflow-hidden
+            ${isActive 
+              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' 
+              : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-300 hover:text-purple-600'
+            }
+          `}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {/* Background gradient animation */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100"
+            initial={false}
+            animate={{ opacity: isActive ? 1 : 0 }}
+            whileHover={{ opacity: isActive ? 1 : 0.1 }}
+            transition={{ duration: 0.3 }}
+          />
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center gap-2">
+            <IconComponent size={16} />
+            <span>{category.label}</span>
+            {(category.id === 'all' ? Object.values(projectCounts).reduce((a, b) => a + b, 0) - (projectCounts.all || 0) : count) > 0 && (
+              <motion.span 
+                className={`
+                  px-2 py-1 text-xs font-bold min-w-[20px] h-5 flex items-center justify-center
+                  ${isActive 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-purple-100 text-purple-600 group-hover:bg-white group-hover:text-purple-600'
+                  }
+                `}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+              >
+                {category.id === 'all' 
+                  ? Object.values(projectCounts).reduce((a, b) => a + b, 0) - (projectCounts.all || 0)
+                  : count
+                }
+              </motion.span>
+            )}
+          </div>
+
+          {/* Ripple effect */}
+          <motion.div
+            className="absolute inset-0 bg-white/20 rounded-full scale-0"
+            whileTap={{ scale: 4, opacity: [0.5, 0] }}
+            transition={{ duration: 0.4 }}
+          />
+        </motion.button>
+      );
+    })}
+  </motion.div>
+);
+
 // Enhanced Project Card Component with scroll-based animations
 interface ProjectCardProps {
   project: Project;
@@ -56,6 +153,10 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClick, formatDate }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(cardRef, { once: true, margin: "0px 0px -100px 0px" });
+  
+  // Get category info for display
+  const categoryInfo = CATEGORIES.find(cat => cat.id === project.category) || CATEGORIES[0];
+  const CategoryIcon = categoryInfo.icon;
   
   // Only 2 animation variants: left to right and right to left
   const animationVariants = [
@@ -107,6 +208,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
               "https://via.placeholder.com/800x450?text=Project";
           }}
         />
+        
+        {/* Category Badge */}
+        <motion.div 
+          className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-purple-600 flex items-center gap-1"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: (index % 6) * 0.1 + 0.3 }}
+        >
+          <CategoryIcon size={12} />
+          {categoryInfo.label}
+        </motion.div>
         
         {/* Animated overlay */}
         <motion.div 
@@ -212,6 +324,7 @@ const ProjectsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Fetch projects from API
   useEffect(() => {
@@ -240,14 +353,36 @@ const ProjectsPage: React.FC = () => {
     fetchProjects();
   }, []);
 
+  // Calculate project counts by category
+  const projectCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    CATEGORIES.forEach(category => {
+      if (category.id === 'all') {
+        counts[category.id] = projects.length;
+      } else {
+        counts[category.id] = projects.filter(p => p.category === category.id).length;
+      }
+    });
+    return counts;
+  }, [projects]);
+
   // Filtered projects
   const filteredProjects = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return projects.filter((p) => {
-      if (!q) return true;
-      return p.title.toLowerCase().includes(q);
-    });
-  }, [projects, query]);
+    let filtered = projects;
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+
+    // Filter by search query
+    if (q) {
+      filtered = filtered.filter(p => p.title.toLowerCase().includes(q));
+    }
+
+    return filtered;
+  }, [projects, query, selectedCategory]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -261,6 +396,11 @@ const ProjectsPage: React.FC = () => {
     if (project.link) {
       window.open(project.link, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setQuery(""); // Clear search when changing category
   };
 
   if (loading) {
@@ -339,6 +479,13 @@ const ProjectsPage: React.FC = () => {
           subtitle="Explore our carefully crafted projects that showcase our expertise and passion for innovation"
         />
 
+        {/* Category Filters */}
+        <CategoryFilters
+          selectedCategory={selectedCategory}
+          onCategoryChange={handleCategoryChange}
+          projectCounts={projectCounts}
+        />
+
         {/* Search Controls */}
         <motion.div 
           className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-center"
@@ -350,7 +497,7 @@ const ProjectsPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Search projects..."
+              placeholder={`Search ${selectedCategory === 'all' ? 'all' : CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase()} projects...`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white"
@@ -366,7 +513,8 @@ const ProjectsPage: React.FC = () => {
           transition={{ delay: 0.4 }}
         >
           Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? "s" : ""}
-          {query ? ` for "${query}"` : ""}
+          {selectedCategory !== 'all' && ` in ${CATEGORIES.find(c => c.id === selectedCategory)?.label}`}
+          {query && ` for "${query}"`}
         </motion.div>
 
         {/* No projects message */}
@@ -387,6 +535,20 @@ const ProjectsPage: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                 >
                   Clear search
+                </motion.button>
+              </>
+            ) : selectedCategory !== 'all' ? (
+              <>
+                <p className="text-gray-600 text-lg mb-4">
+                  No {CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase()} projects yet.
+                </p>
+                <motion.button 
+                  onClick={() => setSelectedCategory('all')}
+                  className="text-purple-600 hover:text-purple-700 font-medium"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  View all projects
                 </motion.button>
               </>
             ) : (
