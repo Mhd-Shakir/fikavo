@@ -15,13 +15,63 @@ interface Project {
   updatedAt: string;
 }
 
-// Category configuration
+// Category configuration with visual styling
 const CATEGORIES = [
-  { id: 'all', label: 'All Projects', icon: Sparkles },
-  { id: 'websites', label: 'Websites', icon: Globe },
-  { id: 'video-editing', label: 'Video Editing', icon: Video },
-  { id: 'graphic-design', label: 'Graphic Design', icon: Palette },
-  { id: 'branding', label: 'Branding', icon: Award }
+  { 
+    id: 'all', 
+    label: 'All Projects', 
+    icon: Sparkles,
+    colors: {
+      primary: '#8B5CF6', // purple
+      secondary: '#A78BFA',
+      background: 'from-purple-500 to-purple-600',
+      badge: 'bg-purple-100 text-purple-800 border-purple-200'
+    }
+  },
+  { 
+    id: 'websites', 
+    label: 'Websites', 
+    icon: Globe,
+    colors: {
+      primary: '#059669', // emerald
+      secondary: '#10B981',
+      background: 'from-emerald-500 to-teal-600',
+      badge: 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    }
+  },
+  { 
+    id: 'video-editing', 
+    label: 'Video Editing', 
+    icon: Video,
+    colors: {
+      primary: '#DC2626', // red
+      secondary: '#EF4444',
+      background: 'from-red-500 to-pink-600',
+      badge: 'bg-red-100 text-red-800 border-red-200'
+    }
+  },
+  { 
+    id: 'graphic-design', 
+    label: 'Graphic Design', 
+    icon: Palette,
+    colors: {
+      primary: '#7C3AED', // violet
+      secondary: '#8B5CF6',
+      background: 'from-violet-500 to-purple-600',
+      badge: 'bg-violet-100 text-violet-800 border-violet-200'
+    }
+  },
+  { 
+    id: 'branding', 
+    label: 'Branding', 
+    icon: Award,
+    colors: {
+      primary: '#EA580C', // orange
+      secondary: '#F97316',
+      background: 'from-orange-500 to-amber-600',
+      badge: 'bg-orange-100 text-orange-800 border-orange-200'
+    }
+  }
 ];
 
 // --- SectionHeader with animation & gradient text ---
@@ -84,12 +134,16 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
           onClick={() => onCategoryChange(category.id)}
           className={`
             relative px-6 py-3 font-medium text-sm transition-all duration-300
-            flex items-center gap-2 group overflow-hidden
+            flex items-center gap-2 group overflow-hidden border-2
             ${isActive 
-              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' 
-              : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-300 hover:text-purple-600'
+              ? `bg-gradient-to-r ${category.colors.background} text-white shadow-lg border-transparent` 
+              : `bg-white text-gray-700 border-gray-300 hover:border-current`
             }
           `}
+          style={{
+            '--hover-color': category.colors.primary,
+            color: isActive ? 'white' : category.colors.primary
+          } as React.CSSProperties}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
@@ -98,7 +152,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
         >
           {/* Background gradient animation */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100"
+            className={`absolute inset-0 bg-gradient-to-r ${category.colors.background} opacity-0 group-hover:opacity-100`}
             initial={false}
             animate={{ opacity: isActive ? 1 : 0 }}
             whileHover={{ opacity: isActive ? 1 : 0.1 }}
@@ -115,7 +169,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
                   px-2 py-1 text-xs font-bold min-w-[20px] h-5 flex items-center justify-center
                   ${isActive 
                     ? 'bg-white/20 text-white' 
-                    : 'bg-purple-100 text-purple-600 group-hover:bg-white group-hover:text-purple-600'
+                    : 'bg-white border text-current group-hover:bg-current group-hover:text-white'
                   }
                 `}
                 initial={{ scale: 0 }}
@@ -155,7 +209,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
   const isInView = useInView(cardRef, { once: true, margin: "0px 0px -100px 0px" });
   
   // Get category info for display
-  const categoryInfo = CATEGORIES.find(cat => cat.id === project.category) || CATEGORIES[0];
+  const categoryInfo = CATEGORIES.find(cat => cat.id === project.category) || CATEGORIES[1]; // Default to websites
   const CategoryIcon = categoryInfo.icon;
   
   // Only 2 animation variants: left to right and right to left
@@ -179,13 +233,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
   return (
     <motion.div
       ref={cardRef}
-      className={`group relative overflow-hidden border border-gray-200 bg-white shadow-sm ${
+      className={`group relative overflow-hidden border-2 bg-white shadow-sm transition-all duration-300 ${
         project.link ? 'cursor-pointer' : 'cursor-default'
       }`}
-      style={{ perspective: "1000px" }}
+      style={{ 
+        perspective: "1000px",
+        borderColor: categoryInfo.colors.primary + '40' // 25% opacity
+      }}
       initial={variant.initial}
       animate={isInView ? variant.animate : variant.initial}
-      whileHover={variant.whileHover}
+      whileHover={{
+        ...variant.whileHover,
+        borderColor: categoryInfo.colors.primary,
+        boxShadow: `0 20px 25px -5px ${categoryInfo.colors.primary}20, 0 10px 10px -5px ${categoryInfo.colors.primary}10`
+      }}
       transition={{
         duration: 0.6,
         delay: (index % 6) * 0.1,
@@ -193,6 +254,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
       }}
       onClick={() => onProjectClick(project)}
     >
+      {/* Category Color Strip */}
+      <motion.div 
+        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${categoryInfo.colors.background} z-10`}
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ delay: (index % 6) * 0.1 + 0.5, duration: 0.8 }}
+      />
+
       {/* Project Image */}
       <div className="aspect-video relative overflow-hidden">
         <motion.img
@@ -209,20 +278,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
           }}
         />
         
-        {/* Category Badge */}
+        {/* Category Badge with category-specific styling */}
         <motion.div 
-          className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-purple-600 flex items-center gap-1"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: (index % 6) * 0.1 + 0.3 }}
+          className={`absolute top-3 left-3 px-3 py-1.5 ${categoryInfo.colors.badge} backdrop-blur-sm text-xs font-semibold flex items-center gap-1.5 border`}
+          initial={{ opacity: 0, scale: 0.8, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: (index % 6) * 0.1 + 0.3, type: "spring" }}
         >
-          <CategoryIcon size={12} />
+          <CategoryIcon size={14} />
           {categoryInfo.label}
         </motion.div>
         
-        {/* Animated overlay */}
+        {/* Animated overlay with category color */}
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to top, ${categoryInfo.colors.primary}99 0%, transparent 60%)`
+          }}
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -237,23 +309,45 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
             transition={{ duration: 0.3, delay: 0.1 }}
           >
             <motion.div 
-              className="bg-white/90 backdrop-blur-sm p-3"
+              className="bg-white/95 backdrop-blur-sm p-4 shadow-lg"
+              style={{ borderColor: categoryInfo.colors.primary }}
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.5 }}
             >
-              <ExternalLink className="text-purple-600" size={20} />
+              <ExternalLink style={{ color: categoryInfo.colors.primary }} size={24} />
             </motion.div>
           </motion.div>
         )}
+
+        {/* Corner decoration */}
+        <motion.div
+          className={`absolute top-0 right-0 w-0 h-0 border-l-[30px] border-b-[30px] border-l-transparent`}
+          style={{ 
+            borderBottomColor: categoryInfo.colors.primary + '20'
+          }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: (index % 6) * 0.1 + 0.7 }}
+        />
       </div>
 
-      {/* Project Content with staggered text animation */}
-      <div className="p-6">
-        <div className="flex items-start justify-between gap-3 mb-3">
+      {/* Project Content with category-themed accents */}
+      <div className="p-6 relative">
+        {/* Small accent line */}
+        <motion.div 
+          className={`absolute top-0 left-6 w-12 h-0.5 bg-gradient-to-r ${categoryInfo.colors.background}`}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: (index % 6) * 0.1 + 0.4 }}
+        />
+
+        <div className="flex items-start justify-between gap-3 mb-3 pt-2">
           <motion.h3 
-            className="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors"
+            className="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-current transition-colors"
+            style={{ '--tw-text-opacity': '1' }}
             initial={{ opacity: 0, y: 10 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+            whileHover={{ color: categoryInfo.colors.primary }}
             transition={{ delay: (index % 6) * 0.1 + 0.2 }}
           >
             {project.title}
@@ -270,7 +364,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
                 whileHover={{ x: 5 }}
                 transition={{ duration: 0.2 }}
               >
-                <MoveRight className="text-purple-600" size={18} />
+                <MoveRight style={{ color: categoryInfo.colors.primary }} size={18} />
               </motion.div>
             </motion.div>
           )}
@@ -287,11 +381,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
 
         {project.link && (
           <motion.div 
-            className="inline-flex items-center gap-1 text-sm font-medium text-purple-600 group-hover:text-purple-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm font-medium transition-colors"
+            style={{ color: categoryInfo.colors.primary }}
             initial={{ opacity: 0, y: 10 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
             transition={{ delay: (index % 6) * 0.1 + 0.4 }}
-            whileHover={{ x: 5 }}
+            whileHover={{ x: 5, color: categoryInfo.colors.secondary }}
           >
             <span>View Project</span>
             <ExternalLink size={14} />
@@ -299,19 +394,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, onProjectClic
         )}
       </div>
 
-      {/* Animated border effect */}
+      {/* Animated border effect with category color */}
       <motion.div 
-        className="absolute inset-0 border-2 border-purple-200 pointer-events-none"
+        className="absolute inset-0 border-2 pointer-events-none"
+        style={{ borderColor: categoryInfo.colors.primary }}
         initial={{ opacity: 0, scale: 1.02 }}
-        whileHover={{ opacity: 1, scale: 1 }}
+        whileHover={{ opacity: 0.3, scale: 1 }}
         transition={{ duration: 0.3 }}
       />
       
-      {/* Subtle glow effect */}
+      {/* Subtle glow effect with category colors */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-blue-500/0 to-purple-500/0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         whileHover={{
-          background: "linear-gradient(90deg, rgba(139,92,246,0.1) 0%, rgba(59,130,246,0.1) 50%, rgba(139,92,246,0.1) 100%)"
+          background: `linear-gradient(90deg, ${categoryInfo.colors.primary}10 0%, ${categoryInfo.colors.secondary}10 50%, ${categoryInfo.colors.primary}10 100%)`
         }}
         transition={{ duration: 0.3 }}
       />
