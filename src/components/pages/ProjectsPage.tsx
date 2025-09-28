@@ -1,7 +1,7 @@
 // Frontend/src/pages/ProjectsPage.tsx
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { MoveRight, Sparkles, Search, ExternalLink, Globe, Video, Palette, Award } from "lucide-react";
+import { MoveRight, Sparkles, Search, ExternalLink, Globe, Video, Palette, Award, RefreshCw } from "lucide-react";
 
 // --- Types ---
 interface Project {
@@ -10,9 +10,16 @@ interface Project {
   image: string;
   date: string;
   link?: string;
-  category: string; // Added category field
+  category: string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface CategoryStats {
+  websites: number;
+  'video-editing': number;
+  'graphic-design': number;
+  branding: number;
 }
 
 // Category configuration with visual styling
@@ -110,12 +117,14 @@ interface CategoryFiltersProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
   projectCounts: Record<string, number>;
+  loading: boolean;
 }
 
 const CategoryFilters: React.FC<CategoryFiltersProps> = ({ 
   selectedCategory, 
   onCategoryChange, 
-  projectCounts 
+  projectCounts,
+  loading
 }) => (
   <motion.div 
     className="mb-8 flex flex-wrap gap-3 justify-center"
@@ -125,16 +134,20 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
   >
     {CATEGORIES.map((category, index) => {
       const IconComponent = category.icon;
-      const count = projectCounts[category.id] || 0;
+      const count = category.id === 'all' 
+        ? Object.values(projectCounts).reduce((a, b) => a + b, 0)
+        : projectCounts[category.id] || 0;
       const isActive = selectedCategory === category.id;
       
       return (
         <motion.button
           key={category.id}
           onClick={() => onCategoryChange(category.id)}
+          disabled={loading}
           className={`
             relative px-6 py-3 font-medium text-sm transition-all duration-300
             flex items-center gap-2 group overflow-hidden border-2
+            ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             ${isActive 
               ? `bg-gradient-to-r ${category.colors.background} text-white shadow-lg border-transparent` 
               : `bg-white text-gray-700 border-gray-300 hover:border-current`
@@ -147,15 +160,15 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: loading ? 1 : 1.05, y: loading ? 0 : -2 }}
+          whileTap={{ scale: loading ? 1 : 0.95 }}
         >
           {/* Background gradient animation */}
           <motion.div
             className={`absolute inset-0 bg-gradient-to-r ${category.colors.background} opacity-0 group-hover:opacity-100`}
             initial={false}
             animate={{ opacity: isActive ? 1 : 0 }}
-            whileHover={{ opacity: isActive ? 1 : 0.1 }}
+            whileHover={{ opacity: isActive ? 1 : (loading ? 0 : 0.1) }}
             transition={{ duration: 0.3 }}
           />
           
@@ -163,7 +176,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
           <div className="relative z-10 flex items-center gap-2">
             <IconComponent size={16} />
             <span>{category.label}</span>
-            {(category.id === 'all' ? Object.values(projectCounts).reduce((a, b) => a + b, 0) - (projectCounts.all || 0) : count) > 0 && (
+            {count > 0 && (
               <motion.span 
                 className={`
                   px-2 py-1 text-xs font-bold min-w-[20px] h-5 flex items-center justify-center
@@ -176,10 +189,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring" }}
               >
-                {category.id === 'all' 
-                  ? Object.values(projectCounts).reduce((a, b) => a + b, 0) - (projectCounts.all || 0)
-                  : count
-                }
+                {count}
               </motion.span>
             )}
           </div>
@@ -187,7 +197,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
           {/* Ripple effect */}
           <motion.div
             className="absolute inset-0 bg-white/20 rounded-full scale-0"
-            whileTap={{ scale: 4, opacity: [0.5, 0] }}
+            whileTap={{ scale: loading ? 0 : 4, opacity: [0.5, 0] }}
             transition={{ duration: 0.4 }}
           />
         </motion.button>
@@ -196,7 +206,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
   </motion.div>
 );
 
-// Enhanced Project Card Component with scroll-based animations
+// Enhanced Project Card Component
 interface ProjectCardProps {
   project: Project;
   index: number;
@@ -421,64 +431,83 @@ const ProjectsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categoryStats, setCategoryStats] = useState<CategoryStats>({
+    websites: 0,
+    'video-editing': 0,
+    'graphic-design': 0,
+    branding: 0
+  });
 
-  // Fetch projects from API
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/projects`);
-        const data = await response.json();
-
-        if (data.success) {
-          const sortedProjects = data.projects.sort((a: Project, b: Project) => 
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          );
-          setProjects(sortedProjects);
-        } else {
-          setError('Failed to load projects');
-        }
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        setError('Failed to load projects');
-      } finally {
-        setLoading(false);
+  // Fetch projects from API with category filtering
+  const fetchProjects = useCallback(async (category: string = 'all') => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/api/projects`);
+      if (category !== 'all') {
+        url.searchParams.append('category', category);
       }
-    };
+      
+      const response = await fetch(url.toString());
+      const data = await response.json();
 
-    fetchProjects();
+      if (data.success) {
+        setProjects(data.projects);
+      } else {
+        setError('Failed to load projects');
+      }
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+      setError('Failed to load projects');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Calculate project counts by category
-  const projectCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    CATEGORIES.forEach(category => {
-      if (category.id === 'all') {
-        counts[category.id] = projects.length;
-      } else {
-        counts[category.id] = projects.filter(p => p.category === category.id).length;
-      }
-    });
-    return counts;
-  }, [projects]);
+  // Fetch category statistics
+  const fetchCategoryStats = useCallback(async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/projects/categories/stats`);
+      const data = await response.json();
 
-  // Filtered projects
+      if (data.success) {
+        setCategoryStats(data.stats);
+      }
+    } catch (err) {
+      console.error('Error fetching category stats:', err);
+      // Don't show error for stats, just use empty counts
+    }
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchProjects();
+    fetchCategoryStats();
+  }, [fetchProjects, fetchCategoryStats]);
+
+  // Calculate project counts for display
+  const projectCounts = useMemo(() => {
+    const counts: Record<string, number> = { ...categoryStats };
+    
+    // If we're showing all projects, use the actual project count
+    if (selectedCategory === 'all') {
+      counts.all = projects.length;
+    }
+    
+    return counts;
+  }, [categoryStats, projects.length, selectedCategory]);
+
+  // Filtered projects (only for search now, category filtering is done server-side)
   const filteredProjects = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let filtered = projects;
-
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category === selectedCategory);
+    
+    if (!q) {
+      return projects;
     }
 
-    // Filter by search query
-    if (q) {
-      filtered = filtered.filter(p => p.title.toLowerCase().includes(q));
-    }
-
-    return filtered;
-  }, [projects, query, selectedCategory]);
+    return projects.filter(p => p.title.toLowerCase().includes(q));
+  }, [projects, query]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -497,39 +526,29 @@ const ProjectsPage: React.FC = () => {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setQuery(""); // Clear search when changing category
+    fetchProjects(category); // Fetch projects for the selected category
   };
 
-  if (loading) {
-    return (
-      <section className="py-24 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center">
-            <motion.div 
-              className="h-12 w-12 border-b-2 border-purple-600 mx-auto"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              style={{ borderRadius: "50%" }}
-            />
-            <p className="mt-4 text-gray-600">Loading projects...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const handleRetry = () => {
+    fetchProjects(selectedCategory);
+    fetchCategoryStats();
+  };
 
   if (error) {
     return (
       <section className="py-24 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center">
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-600 mb-4">{error}</p>
             <motion.button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 transition"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              onClick={handleRetry}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white hover:bg-purple-700 transition disabled:opacity-50"
+              whileHover={{ scale: loading ? 1 : 1.05 }}
+              whileTap={{ scale: loading ? 1 : 0.95 }}
             >
-              Try Again
+              <RefreshCw className={loading ? "animate-spin" : ""} size={18} />
+              {loading ? "Loading..." : "Try Again"}
             </motion.button>
           </div>
         </div>
@@ -580,6 +599,7 @@ const ProjectsPage: React.FC = () => {
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
           projectCounts={projectCounts}
+          loading={loading}
         />
 
         {/* Search Controls */}
@@ -596,25 +616,45 @@ const ProjectsPage: React.FC = () => {
               placeholder={`Search ${selectedCategory === 'all' ? 'all' : CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase()} projects...`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white"
+              disabled={loading}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white disabled:opacity-50"
             />
           </div>
         </motion.div>
 
+        {/* Loading state */}
+        {loading && (
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div 
+              className="h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              style={{ borderRadius: "50%" }}
+            />
+            <p className="text-gray-600">Loading projects...</p>
+          </motion.div>
+        )}
+
         {/* Count */}
-        <motion.div 
-          className="mb-8 text-center text-sm text-gray-600"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? "s" : ""}
-          {selectedCategory !== 'all' && ` in ${CATEGORIES.find(c => c.id === selectedCategory)?.label}`}
-          {query && ` for "${query}"`}
-        </motion.div>
+        {!loading && (
+          <motion.div 
+            className="mb-8 text-center text-sm text-gray-600"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? "s" : ""}
+            {selectedCategory !== 'all' && ` in ${CATEGORIES.find(c => c.id === selectedCategory)?.label}`}
+            {query && ` for "${query}"`}
+          </motion.div>
+        )}
 
         {/* No projects message */}
-        {filteredProjects.length === 0 ? (
+        {!loading && filteredProjects.length === 0 && (
           <motion.div 
             className="text-center py-12"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -654,7 +694,10 @@ const ProjectsPage: React.FC = () => {
               </>
             )}
           </motion.div>
-        ) : (
+        )}
+
+        {/* Projects Grid */}
+        {!loading && filteredProjects.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project, idx) => (
               <ProjectCard
