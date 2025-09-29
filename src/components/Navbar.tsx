@@ -2,14 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import FikavoLogo from "../assets/fikavo logo final/fikavo_logo.png";
-import { Menu, Instagram, Facebook, X, Linkedin, MapPin, Phone, Mail, AlignRight, ChevronDown, Plus } from "lucide-react";
+import { Menu, Instagram, Facebook, X, Linkedin, MapPin, Phone, Mail, AlignRight } from "lucide-react";
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isVarietyPanelOpen, setIsVarietyPanelOpen] = useState(false);
-  const [isProjectsDropdownOpen, setIsProjectsDropdownOpen] = useState(false);
-  const [isMobileProjectsOpen, setIsMobileProjectsOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
 
   useEffect(() => {
@@ -34,12 +32,6 @@ const Navbar: React.FC = () => {
       if (isVarietyPanelOpen) {
         setIsVarietyPanelOpen(false);
       }
-      if (isProjectsDropdownOpen) {
-        setIsProjectsDropdownOpen(false);
-      }
-      if (isMobileProjectsOpen) {
-        setIsMobileProjectsOpen(false);
-      }
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -49,22 +41,12 @@ const Navbar: React.FC = () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
     };
-      }, [isMobileMenuOpen, isVarietyPanelOpen, isProjectsDropdownOpen, isMobileProjectsOpen]);
+  }, [isMobileMenuOpen, isVarietyPanelOpen]);
 
   const navLinks = [
     { label: "About", path: "/about" },
     { label: "Services", path: "/services" },
-    { 
-      label: "Projects", 
-      path: "/projects",
-      hasDropdown: true,
-      dropdownItems: [
-        { label: "Websites", path: "/projects/websites" },
-        { label: "Video Editing", path: "/projects/videoediting" },
-        { label: "Grpahic Design", path: "/projects/graphicdesign" },
-        { label: "Branding", path: "/projects/branding" },
-      ]
-    },
+    { label: "Projects", path: "/projects" },
     { label: "Contact", path: "/contact" },
   ];
 
@@ -109,33 +91,6 @@ const Navbar: React.FC = () => {
           duration: 0.8,
           ease: [0.25, 1, 0.5, 1]
         }
-      }
-    }
-  };
-
-  // Animation variants for dropdown
-  const dropdownVariants = {
-    closed: {
-      opacity: 0,
-      y: -10,
-      scale: 0.95,
-    },
-    open: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.2,
-        ease: [0.25, 1, 0.5, 1]
-      }
-    },
-    exit: {
-      opacity: 0,
-      y: -10,
-      scale: 0.95,
-      transition: {
-        duration: 0.15,
-        ease: [0.25, 1, 0.5, 1]
       }
     }
   };
@@ -249,7 +204,6 @@ const Navbar: React.FC = () => {
               {navLinks.map((link, index) => (
                 <motion.div
                   key={link.path}
-                  className="relative"
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
@@ -258,67 +212,17 @@ const Navbar: React.FC = () => {
                     ease: [0.25, 1, 0.5, 1],
                   }}
                 >
-                  {link.hasDropdown ? (
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setIsProjectsDropdownOpen(true)}
-                      onMouseLeave={() => setIsProjectsDropdownOpen(false)}
-                    >
-                      <Link
-                        to={link.path}
-                        className="relative inline-flex items-center text-brand-dark px-2 lg:px-3 py-2 text-sm lg:text-base font-medium font-poppins group whitespace-nowrap"
-                      >
-                        {link.label}
-                        <ChevronDown 
-                          size={16} 
-                          className={`ml-1 transition-transform duration-200 ${
-                            isProjectsDropdownOpen ? 'rotate-180' : ''
-                          }`} 
-                        />
-                        <span
-                          className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 w-full bg-brand-violet
-                      origin-right scale-x-0 group-hover:origin-left group-hover:scale-x-100
-                      transition-transform duration-300 ease-out"
-                        />
-                      </Link>
-
-                      {/* Dropdown Menu */}
-                      <AnimatePresence>
-                        {isProjectsDropdownOpen && (
-                          <motion.div
-                            className="absolute top-full left-0 mt-1 bg-white/95 backdrop-blur-md shadow-xl rounded-xl border border-gray-100 py-2 min-w-48 z-50"
-                            variants={dropdownVariants}
-                            initial="closed"
-                            animate="open"
-                            exit="exit"
-                          >
-                            {link.dropdownItems?.map((item, itemIndex) => (
-                              <Link
-                                key={item.path}
-                                to={item.path}
-                                className="block px-4 py-2 text-sm text-brand-dark hover:bg-brand-violet/10 hover:text-brand-violet transition-colors duration-200 font-poppins whitespace-nowrap"
-                                onClick={() => setIsProjectsDropdownOpen(false)}
-                              >
-                                {item.label}
-                              </Link>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ) : (
-                    <Link
-                      to={link.path}
-                      className="relative inline-flex items-center text-brand-dark px-2 lg:px-3 py-2 text-sm lg:text-base font-medium font-poppins group whitespace-nowrap"
-                    >
-                      {link.label}
-                      <span
-                        className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 w-full bg-brand-violet
+                  <Link
+                    to={link.path}
+                    className="relative inline-flex items-center text-brand-dark px-2 lg:px-3 py-2 text-sm lg:text-base font-medium font-poppins group whitespace-nowrap"
+                  >
+                    {link.label}
+                    <span
+                      className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 w-full bg-brand-violet
                     origin-right scale-x-0 group-hover:origin-left group-hover:scale-x-100
                     transition-transform duration-300 ease-out"
-                      />
-                    </Link>
-                  )}
+                    />
+                  </Link>
                 </motion.div>
               ))}
             </div>
@@ -432,83 +336,17 @@ const Navbar: React.FC = () => {
                   exit="exit"
                   className="overflow-hidden"
                 >
-                  {link.hasDropdown ? (
-                    <div className="space-y-1">
-                      <div className="flex items-center rounded-xl hover:bg-brand-violet/10 transition-all duration-300 group relative overflow-hidden">
-                        <Link
-                          to={link.path}
-                          className="flex-1 px-4 sm:px-6 py-3 sm:py-4 text-brand-dark hover:text-brand-violet font-poppins font-medium text-base sm:text-lg"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <span className="relative z-10">{link.label}</span>
-                        </Link>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setIsMobileProjectsOpen(!isMobileProjectsOpen);
-                          }}
-                          className="px-3 sm:px-4 py-3 sm:py-4 text-brand-dark hover:text-brand-violet hover:bg-brand-violet/20 transition-colors"
-                        >
-                          <Plus 
-                            size={20} 
-                            className={`transition-transform duration-200 ${
-                              isMobileProjectsOpen ? 'rotate-45' : ''
-                            }`}
-                          />
-                        </button>
-                        <motion.div 
-                          className="absolute inset-0 bg-gradient-to-r from-brand-violet/5 to-brand-violet/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                          whileHover={{ scale: 1.02 }}
-                        />
-                      </div>
-                      {/* Mobile Dropdown Items */}
-                      <AnimatePresence>
-                        {isMobileProjectsOpen && (
-                          <motion.div 
-                            className="ml-4 space-y-1 overflow-hidden"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
-                          >
-                            {link.dropdownItems?.map((item) => (
-                              <motion.div
-                                key={item.path}
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                exit={{ x: -20, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <Link
-                                  to={item.path}
-                                  className="block px-4 sm:px-6 py-2 text-brand-dark/80 hover:bg-brand-violet/5 hover:text-brand-violet rounded-lg transition-all duration-300 font-poppins text-sm sm:text-base"
-                                  onClick={() => {
-                                    setIsMobileMenuOpen(false);
-                                    setIsMobileProjectsOpen(false);
-                                  }}
-                                >
-                                  {item.label}
-                                </Link>
-                              </motion.div>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ) : (
-                    <Link
-                      to={link.path}
-                      className="block px-4 sm:px-6 py-3 sm:py-4 text-brand-dark hover:bg-brand-violet/10 hover:text-brand-violet rounded-xl transition-all duration-300 font-poppins font-medium text-base sm:text-lg group relative"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <span className="relative z-10">{link.label}</span>
-                      <motion.div 
-                        className="absolute inset-0 bg-gradient-to-r from-brand-violet/5 to-brand-violet/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        whileHover={{ scale: 1.02 }}
-                      />
-                    </Link>
-                  )}
+                  <Link
+                    to={link.path}
+                    className="block px-4 sm:px-6 py-3 sm:py-4 text-brand-dark hover:bg-brand-violet/10 hover:text-brand-violet rounded-xl transition-all duration-300 font-poppins font-medium text-base sm:text-lg group relative"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <span className="relative z-10">{link.label}</span>
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-r from-brand-violet/5 to-brand-violet/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      whileHover={{ scale: 1.02 }}
+                    />
+                  </Link>
                 </motion.div>
               ))}
               
